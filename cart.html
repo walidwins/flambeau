@@ -1,0 +1,191 @@
+  <!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Votre panier Flambeau">
+  <title>Panier | Flambeau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯</text></svg>">
+</head>
+<body data-page="cart">
+  <a href="#main" class="skip-link">Aller au contenu principal</a>
+
+  <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="index.html" class="nav__logo">FLAMBEAU</a>
+      <ul class="nav__menu">
+        <li><a href="index.html" class="nav__link">Accueil</a></li>
+        <li><a href="shop.html" class="nav__link">Boutique</a></li>
+        <li><a href="shop.html#bougies" class="nav__link">Bougies</a></li>
+        <li><a href="shop.html#bakhour" class="nav__link">Bakhour</a></li>
+      </ul>
+      <div class="nav__actions">
+        <button class="nav__cart-btn" aria-label="Panier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span class="nav__cart-count" aria-live="polite">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <div class="cart-page section">
+      <div class="container">
+        <header class="cart-page__header">
+          <h1 class="cart-page__title">Votre Panier</h1>
+          <nav class="cart-page__breadcrumb" aria-label="Fil d'Ariane">
+            <a href="index.html">Accueil</a> / <a href="shop.html">Boutique</a> / <span>Panier</span>
+          </nav>
+        </header>
+
+        <!-- Empty State -->
+        <div class="cart-page__empty" style="display:none">
+          <svg class="cart-page__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          <h2 class="cart-page__empty-title">Votre panier est vide</h2>
+          <p class="cart-page__empty-text">Découvrez nos créations luxueuses et laissez-vous envoûter.</p>
+          <a href="shop.html" class="btn btn--primary mt-lg">Explorer la boutique</a>
+        </div>
+
+        <div class="cart-page__grid">
+          <!-- Cart Items -->
+          <div class="cart-page__items">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.5rem;padding-bottom:1rem;border-bottom:1px solid var(--color-sand)">
+              <h2 style="font-family:var(--font-display);font-size:1.25rem">Articles</h2>
+              <a href="shop.html" style="font-size:0.75rem;color:var(--color-warm-gray);text-transform:uppercase;letter-spacing:0.1em">← Continuer mes achats</a>
+            </div>
+          </div>
+
+          <!-- Order Summary -->
+          <div class="cart-page__summary">
+            <h2 class="cart-page__summary-title">Données de livraison</h2>
+            <div>
+              <form id="orderForm">
+                <label for="nom">Nom :</label>
+                  <input type="text" class="form-input" placeholder="Jean Dupont" style="width:100%;margin-top:0.5rem" id="nom" required>
+                <label for="prenom">Prénom :</label>
+                  <input type="text" class="form-input" placeholder="Jean" style="width:100%;margin-top:0.5rem" id="prenom" required>
+                <label for="numero">Numero de téléphone :</label>
+                  <input type="text" class="form-input" placeholder="06 XX XX XX XX" style="width:100%;margin-top:0.5rem" id="numero" required>
+                <label for="ville">Ville :</label>
+                  <input type="text" class="form-input" placeholder="Oujda" style="width:100%;margin-top:0.5rem" id="ville" required>
+                <label for="code-postal">Code postal :</label>
+                  <input type="text" class="form-input" placeholder="60000" style="width:100%;margin-top:0.5rem" id="code-postal" required>
+                <label for="adresse">Adresse de livraison :</label>
+                  <input type="text" class="form-input" placeholder="123 Rue de Oujda, 60000 Oujda" style="width:100%;margin-top:0.5rem" id="adresse" required >
+                <button type="button" class="cart-page__checkout-btn">
+                  Passer la commande →<a href="confirmation.html" style="color:inherit;text-decoration:underline">Confirmation</a>
+                </button>
+              </form>
+            </div>
+            <br>
+            
+            <div class="cart-page__summary-row cart-page__subtotal">
+              <span>Sous-total</span>
+              <span class="text-price">—</span>
+            </div>
+            <div class="cart-page__summary-row cart-page__shipping">
+              <span>Livraison</span>
+              <span class="text-price">—</span>
+            </div>
+            <div class="cart-page__summary-row cart-page__summary-row--total cart-page__total">
+              <span>Total</span>
+              <span class="text-price">—</span>
+            </div>
+
+            <!-- Promo code 
+            <div style="margin-top:1.5rem;padding-top:1.5rem;border-top:1px solid var(--color-sand)">
+              <p style="font-size:0.75rem;font-weight:600;letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.75rem">Code promo</p>
+              <div style="display:flex;gap:0.5rem">
+                <input type="text" placeholder="FLAMBEAU10" class="form-input" style="flex:1;padding:10px 14px;font-size:0.875rem">
+                <button style="padding:10px 16px;background:var(--color-charcoal);color:#fff;font-size:0.75rem;letter-spacing:0.1em;text-transform:uppercase;border:none;cursor:pointer">OK</button>
+              </div>
+            </div>-->
+
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <h2 class="footer__logo">FLAMBEAU</h2>
+          <p class="footer__tagline">L'art de la haute parfumerie, créateur d'ambiances luxueuses depuis 2019.</p>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Boutique</h3>
+          <nav class="footer__links">
+            <a href="shop.html" class="footer__link">Toutes nos créations</a>
+            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
+            <a href="shop.html#fondants" class="footer__link">Fondants</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Aide</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">Livraison</a>
+            <a href="#" class="footer__link">Retours</a>
+            <a href="#" class="footer__link">FAQ</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Contact</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">WhatsApp</a>
+            <a href="#" class="footer__link">Instagram</a>
+            <a href="#" class="footer__link">Email</a>
+          </nav>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>© 2025 Flambeau. Tous droits réservés.</p>
+        <div class="footer__legal">
+          <a href="#" class="footer__link">Mentions légales</a>
+          <a href="#" class="footer__link">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Cart Drawer (also used on this page for quick access) -->
+  <div class="cart-overlay" aria-hidden="true"></div>
+  <aside class="cart-drawer" role="dialog" aria-label="Panier">
+    <header class="cart-drawer__header">
+      <h2 class="cart-drawer__title">Votre Panier</h2>
+      <button class="cart-drawer__close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="cart-drawer__empty">
+      <svg class="cart-drawer__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <h3 class="cart-drawer__empty-title">Votre panier est vide</h3>
+      <p class="cart-drawer__empty-text">Découvrez nos créations luxueuses</p>
+      <a href="shop.html" class="btn btn--primary">Visiter la boutique</a>
+    </div>
+    <div class="cart-drawer__items"></div>
+    <footer class="cart-drawer__footer">
+      <div class="cart-drawer__subtotal">
+        <span class="cart-drawer__subtotal-label">Sous-total</span>
+        <span class="cart-drawer__subtotal-value">0,00 €</span>
+      </div>
+      <button class="cart-drawer__checkout" onclick="window.location.href='cart.html'">Commander</button>
+    </footer>
+  </aside>
+
+  <div id="toast-container"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>

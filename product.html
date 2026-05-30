@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Flambeau - Détail produit">
+  <title>Produit | Flambeau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯</text></svg>">
+</head>
+<body data-page="product">
+  <a href="#main" class="skip-link">Aller au contenu principal</a>
+
+  <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="index.html" class="nav__logo" aria-label="Flambeau - Accueil">FLAMBEAU</a>
+      <ul class="nav__menu">
+        <li><a href="index.html" class="nav__link">Accueil</a></li>
+        <li><a href="shop.html" class="nav__link nav__link--active">Boutique</a></li>
+        <li><a href="shop.html#bougies" class="nav__link">Bougies</a></li>
+        <li><a href="shop.html#bakhour" class="nav__link">Bakhour</a></li>
+      </ul>
+      <div class="nav__actions">
+        <button class="nav__cart-btn" aria-label="Panier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          <span class="nav__cart-count" aria-live="polite">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <section class="product-detail section">
+      <div class="container">
+        <nav class="product-detail__breadcrumb" aria-label="Fil d'Ariane" style="margin-bottom:2rem;font-size:0.75rem;color:var(--color-warm-gray);">
+          <a href="index.html" style="color:var(--color-charcoal)">Accueil</a>
+          &nbsp;/&nbsp;
+          <a href="shop.html" style="color:var(--color-charcoal)">Boutique</a>
+          &nbsp;/&nbsp;
+          <span class="product-detail__category" style="color:var(--color-champagne)">Produit</span>
+        </nav>
+
+        <div class="product-detail__grid">
+          <!-- Gallery -->
+          <div class="product-detail__gallery reveal">
+            <div class="product-detail__main-image">
+              <img src="" alt="" loading="eager">
+            </div>
+            <div class="product-detail__thumbnails" id="thumbnails"></div>
+          </div>
+
+          <!-- Info -->
+          <div class="product-detail__info reveal reveal-delay-1">
+            <p class="product-detail__category text-label"></p>
+            <h1 class="product-detail__title"></h1>
+            <p class="product-detail__price text-price"></p>
+            <p class="product-detail__description"></p>
+
+            <div class="product-detail__notes">
+              <p class="product-detail__notes-title">Notes olfactives</p>
+              <div class="product-detail__notes-list"></div>
+            </div>
+
+            <div class="product-detail__add-to-cart">
+              <div class="product-detail__quantity">
+                <button class="product-detail__qty-btn" aria-label="Diminuer">−</button>
+                <span class="product-detail__qty-value">1</span>
+                <button class="product-detail__qty-btn" aria-label="Augmenter">+</button>
+              </div>
+              <button class="product-detail__add-btn">Ajouter au panier</button>
+            </div>
+
+            <div class="product-detail__meta">
+              <div class="product-detail__meta-item">
+                <span style="font-weight:500;color:var(--color-charcoal)">Poids&nbsp;:&nbsp;</span>
+                <span data-weight></span>
+              </div>
+              <div class="product-detail__meta-item" style="margin-top:0.5rem">
+                <span style="font-weight:500;color:var(--color-charcoal)">Livraison&nbsp;:&nbsp;</span>
+                <span>2–5 jours ouvrés, partout au Maroc</span>
+              </div>
+              <div class="product-detail__meta-item" style="margin-top:0.5rem">
+                <span style="font-weight:500;color:var(--color-charcoal)">Fabrication&nbsp;:&nbsp;</span>
+                <span>Artisanale, cire naturelle, sans phtalates</span>
+              </div>
+            </div>
+
+            <div style="margin-top:2rem;padding-top:2rem;border-top:1px solid var(--color-sand);display:flex;gap:1rem;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--color-warm-gray)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Paiement sécurisé
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--color-warm-gray)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                Retours sous 14 jours
+              </div>
+              <div style="display:flex;align-items:center;gap:0.5rem;font-size:0.75rem;color:var(--color-warm-gray)">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M21 16V8a2 2 0 00-1-1.73l-7-4a2 2 0 00-2 0l-7 4A2 2 0 003 8v8a2 2 0 001 1.73l7 4a2 2 0 002 0l7-4A2 2 0 0021 16z"/></svg>
+                Emballage cadeau offert
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Related Products -->
+    <section class="section related-products" style="background-color:var(--color-beige)">
+      <div class="container">
+        <header class="section-header reveal">
+          <p class="text-label section-header__label">Vous aimerez aussi</p>
+          <h2 class="section-header__title">Dans la même collection</h2>
+        </header>
+        <div class="products-grid"></div>
+      </div>
+    </section>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <h2 class="footer__logo">FLAMBEAU</h2>
+          <p class="footer__tagline">L'art de la haute parfumerie, créateur d'ambiances luxueuses depuis 2019.</p>
+          <div class="footer__social">
+            <a href="#" class="footer__social-link" aria-label="Instagram">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1112.63 8 4 4 0 0116 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+            </a>
+            <a href="#" class="footer__social-link" aria-label="Facebook">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M18 2h-3a5 5 0 00-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 011-1h3z"/></svg>
+            </a>
+          </div>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Boutique</h3>
+          <nav class="footer__links">
+            <a href="shop.html" class="footer__link">Toutes nos créations</a>
+            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
+            <a href="shop.html#fondants" class="footer__link">Fondants</a>
+            <a href="shop.html#bakhour" class="footer__link">Bakhour</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Aide</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">Livraison</a>
+            <a href="#" class="footer__link">Retours</a>
+            <a href="#" class="footer__link">FAQ</a>
+            <a href="#" class="footer__link">Contact</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Informations</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">À propos</a>
+            <a href="#" class="footer__link">CGV</a>
+            <a href="#" class="footer__link">Confidentialité</a>
+          </nav>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>© 2025 Flambeau. Tous droits réservés.</p>
+        <div class="footer__legal">
+          <a href="#" class="footer__link">Mentions légales</a>
+          <a href="#" class="footer__link">Cookies</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="cart-overlay" aria-hidden="true"></div>
+  <aside class="cart-drawer" role="dialog" aria-label="Panier">
+    <header class="cart-drawer__header">
+      <h2 class="cart-drawer__title">Votre Panier</h2>
+      <button class="cart-drawer__close" aria-label="Fermer le panier">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="cart-drawer__empty">
+      <svg class="cart-drawer__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <h3 class="cart-drawer__empty-title">Votre panier est vide</h3>
+      <p class="cart-drawer__empty-text">Découvrez nos créations luxueuses</p>
+      <a href="shop.html" class="btn btn--primary">Visiter la boutique</a>
+    </div>
+    <div class="cart-drawer__items"></div>
+    <footer class="cart-drawer__footer">
+      <div class="cart-drawer__subtotal">
+        <span class="cart-drawer__subtotal-label">Sous-total</span>
+        <span class="cart-drawer__subtotal-value">0,00 €</span>
+      </div>
+      <button class="cart-drawer__checkout" onclick="window.location.href='cart.html'">Voir le panier & Commander</button>
+    </footer>
+  </aside>
+
+  <div id="toast-container"></div>
+  <script src="js/app.js"></script>
+</body>
+</html>

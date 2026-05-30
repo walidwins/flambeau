@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Commande confirmée - Flambeau">
+  <title>Commande Confirmée | Flambeau</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/styles.css">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯</text></svg>">
+  <style>
+    .confetti-dot {
+      position: fixed;
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      animation: fall linear forwards;
+      pointer-events: none;
+      z-index: 9999;
+    }
+    @keyframes fall {
+      0% { transform: translateY(-20px) rotate(0deg); opacity: 1; }
+      100% { transform: translateY(100vh) rotate(720deg); opacity: 0; }
+    }
+    .confirmation-page__steps {
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      margin: 2rem auto;
+      max-width: 500px;
+    }
+    .step {
+      flex: 1;
+      text-align: center;
+      position: relative;
+    }
+    .step::after {
+      content: '';
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      width: 100%;
+      height: 1px;
+      background: var(--color-champagne);
+    }
+    .step:last-child::after { display: none; }
+    .step-dot {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      background: var(--color-champagne);
+      color: white;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 0.5rem;
+      font-size: 12px;
+      font-weight: 600;
+      position: relative;
+      z-index: 1;
+    }
+    .step-label {
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--color-warm-gray);
+    }
+  </style>
+</head>
+<body data-page="confirmation">
+  <a href="#main" class="skip-link">Aller au contenu principal</a>
+
+  <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span><span></span><span></span>
+      </button>
+      <a href="index.html" class="nav__logo">FLAMBEAU</a>
+      <ul class="nav__menu">
+        <li><a href="index.html" class="nav__link">Accueil</a></li>
+        <li><a href="shop.html" class="nav__link">Boutique</a></li>
+        <li><a href="shop.html#bougies" class="nav__link">Bougies</a></li>
+        <li><a href="shop.html#bakhour" class="nav__link">Bakhour</a></li>
+      </ul>
+      <div class="nav__actions">
+        <button class="nav__cart-btn" aria-label="Panier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+          <span class="nav__cart-count" aria-live="polite">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <main id="main">
+    <section class="confirmation-page section">
+      <div class="container">
+
+        <!-- Progress steps -->
+        <div class="confirmation-page__steps">
+          <div class="step">
+            <div class="step-dot">✓</div>
+            <div class="step-label">Panier</div>
+          </div>
+          <div class="step">
+            <div class="step-dot">✓</div>
+            <div class="step-label">Commande</div>
+          </div>
+          <div class="step">
+            <div class="step-dot">✓</div>
+            <div class="step-label">Confirmée</div>
+          </div>
+        </div>
+
+        <!-- Success Icon -->
+        <div style="text-align:center;margin-bottom:2rem">
+          <div style="width:80px;height:80px;background:linear-gradient(135deg,#D4AF37,#B8956E);border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 1.5rem">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2.5">
+              <path d="M20 6L9 17l-5-5"/>
+            </svg>
+          </div>
+          <h1 class="confirmation-page__title">Merci pour votre commande !</h1>
+          <p class="confirmation-page__subtitle">Votre commande a bien été reçue et est en cours de traitement.</p>
+        </div>
+
+        <!-- Order Box -->
+        <div class="confirmation-page__order">
+          <p class="confirmation-page__order-title">Numéro de commande</p>
+          <p class="confirmation-page__order-number" id="order-number">FLB-XXXXXX</p>
+
+          <div class="confirmation-page__order-details" id="order-items">
+            <!-- Populated by JS -->
+          </div>
+
+          <div class="confirmation-page__order-total" id="order-total-row">
+            <span>Total</span>
+            <span class="text-price" id="order-total-amount">—</span>
+          </div>
+        </div>
+
+        <!-- Message -->
+        <p class="confirmation-page__message">
+          Un récapitulatif vous sera envoyé par email. Notre équipe vous contactera sous
+          <strong>24h</strong> pour confirmer les détails de la livraison.<br><br>
+          Pour toute question, contactez-nous via WhatsApp ou Instagram <strong>@flambeau.ma</strong>.
+        </p>
+
+        <!-- CTA -->
+        <div class="confirmation-page__actions">
+          <a href="index.html" class="btn btn--secondary">Retour à l'accueil</a>
+          <a href="shop.html" class="btn btn--primary">Continuer mes achats</a>
+        </div>
+
+        <!-- Brand touch -->
+        <div style="margin-top:4rem;padding-top:3rem;border-top:1px solid var(--color-sand);text-align:center">
+          <p style="font-family:var(--font-display);font-size:1.5rem;color:var(--color-charcoal);margin-bottom:0.5rem;font-style:italic">
+            "Chaque flamme raconte une histoire."
+          </p>
+          <p style="font-size:0.75rem;letter-spacing:0.2em;text-transform:uppercase;color:var(--color-champagne)">— Flambeau</p>
+        </div>
+
+      </div>
+    </section>
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <h2 class="footer__logo">FLAMBEAU</h2>
+          <p class="footer__tagline">L'art de la haute parfumerie, créateur d'ambiances luxueuses depuis 2019.</p>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Boutique</h3>
+          <nav class="footer__links">
+            <a href="shop.html" class="footer__link">Toutes nos créations</a>
+            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Aide</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">Livraison</a>
+            <a href="#" class="footer__link">Retours</a>
+            <a href="#" class="footer__link">FAQ</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Contact</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">WhatsApp</a>
+            <a href="#" class="footer__link">Instagram @flambeau.ma</a>
+          </nav>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>© 2025 Flambeau. Tous droits réservés.</p>
+        <div class="footer__legal">
+          <a href="#" class="footer__link">Mentions légales</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="cart-overlay" aria-hidden="true"></div>
+  <aside class="cart-drawer" role="dialog" aria-label="Panier">
+    <header class="cart-drawer__header">
+      <h2 class="cart-drawer__title">Votre Panier</h2>
+      <button class="cart-drawer__close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="cart-drawer__empty">
+      <svg class="cart-drawer__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <h3 class="cart-drawer__empty-title">Votre panier est vide</h3>
+      <p class="cart-drawer__empty-text">Découvrez nos créations luxueuses</p>
+      <a href="shop.html" class="btn btn--primary">Visiter la boutique</a>
+    </div>
+    <div class="cart-drawer__items"></div>
+    <footer class="cart-drawer__footer">
+      <div class="cart-drawer__subtotal">
+        <span class="cart-drawer__subtotal-label">Sous-total</span>
+        <span class="cart-drawer__subtotal-value">0,00 €</span>
+      </div>
+      <button class="cart-drawer__checkout" onclick="window.location.href='cart.html'">Commander</button>
+    </footer>
+  </aside>
+
+  <div id="toast-container"></div>
+  <script src="js/app.js"></script>
+  
+</body>
+</html>

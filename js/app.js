@@ -552,7 +552,7 @@ function renderCartPage() {
 
 // ---- CONFIGURATION ----
 // Remplacez cette URL par celle de votre Google Apps Script déployé
-var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/u/4/s/AKfycbxmd2o2cJLz1DYp6p527MP0eREVxqwAk-3P-XY3oMGXluoD6zODGfNFcdtnKNFYcYSq/exec';
+var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxmd2o2cJLz1DYp6p527MP0eREVxqwAk-3P-XY3oMGXluoD6zODGfNFcdtnKNFYcYSq/exec';
 
 function submitOrder(orderData) {
   // Envoi vers Google Apps Script (Google Sheets + Gmail)

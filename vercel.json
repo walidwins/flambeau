@@ -1,7 +1,7 @@
 {
-  "version": 2,
-  "public": true,
-  "cleanUrls": false,
-  "trailingSlash": false,
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "framework": null,
+  "buildCommand": null,
+  "installCommand": "",
   "outputDirectory": "public"
 }

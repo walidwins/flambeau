@@ -866,17 +866,21 @@ function renderCartPage() {
 }
 
 function submitOrder(orderData) {
-  return fetch('/api/orders', {
+  if (typeof GOOGLE_SCRIPT_URL === 'undefined' || !GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
+    console.warn('URL Google Apps Script manquante');
+    return Promise.reject(new Error('URL Google Apps Script manquante'));
+  }
+
+  return fetch(GOOGLE_SCRIPT_URL, {
     method: 'POST',
+    mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(orderData)
-  }).then(function(response) {
-    return response.json().then(function(data) {
-      if (!response.ok) {
-        throw new Error(data.error || 'Commande refusée par le serveur');
-      }
-      return data;
-    });
+  }).then(function() {
+    console.log('Commande envoyée vers Google Apps Script');
+  }).catch(function(err) {
+    console.warn('Erreur envoi commande:', err);
+    throw err;
   });
 }
 

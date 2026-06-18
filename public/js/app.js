@@ -865,46 +865,26 @@ function renderCartPage() {
   if (totEl) totEl.textContent = formatPrice(total);
 }
 
-var GOOGLE_APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbx2fp0mYNbZWypaH1awQufsuM3m1Axs5uq3nvhj7-Mohbd9O4nYsQ8DijvrnoN7Sas1/exec";
-
 function submitOrder(orderData) {
-  var scriptUrl = typeof GOOGLE_SCRIPT_URL !== 'undefined' ? GOOGLE_SCRIPT_URL : '';
-
-  if (scriptUrl && scriptUrl !== 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
-    return fetch(scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    }).then(function() {
-      console.log('Commande envoyée vers Google Apps Script');
-    }).catch(function(err) {
-      console.warn('Erreur envoi commande:', err);
-      throw err;
-    });
-  }
-
-  console.warn('URL Google Apps Script manquante, utilisation du backend local /api/orders');
   return fetch('/api/orders', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(orderData)
   }).then(function(response) {
     return response.text().then(function(text) {
+      var data = {};
+      try {
+        data = text ? JSON.parse(text) : {};
+      } catch (e) {
+        data = { raw: text };
+      }
+
       if (!response.ok) {
-        var message = 'Commande refusée par le serveur';
-        try {
-          var data = JSON.parse(text || '{}');
-          if (data && data.error) message = data.error;
-        } catch (e) {}
+        var message = data.error || data.details || data.message || text || 'Commande refusée par le serveur';
         throw new Error(message);
       }
 
-      try {
-        return JSON.parse(text || '{}');
-      } catch (e) {
-        return {};
-      }
+      return data;
     });
   });
 }

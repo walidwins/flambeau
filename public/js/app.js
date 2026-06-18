@@ -865,6 +865,8 @@ function renderCartPage() {
   if (totEl) totEl.textContent = formatPrice(total);
 }
 
+var GOOGLE_APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbx2fp0mYNbZWypaH1awQufsuM3m1Axs5uq3nvhj7-Mohbd9O4nYsQ8DijvrnoN7Sas1/exec";
+
 function submitOrder(orderData) {
   var scriptUrl = typeof GOOGLE_SCRIPT_URL !== 'undefined' ? GOOGLE_SCRIPT_URL : '';
 

@@ -1,6 +1,7 @@
 const crypto = require('crypto');
 const fs = require('fs/promises');
 const http = require('http');
+const os = require('os');
 const path = require('path');
 const { URL } = require('url');
 
@@ -8,7 +9,8 @@ const ROOT_DIR = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
 const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
-const ORDERS_FILE = path.join(DATA_DIR, 'orders.json');
+const IS_VERCEL = Boolean(process.env.VERCEL);
+const ORDERS_FILE = IS_VERCEL ? path.join(os.tmpdir(), 'flambeau-orders.json') : path.join(DATA_DIR, 'orders.json');
 const ENV_FILE = path.join(ROOT_DIR, '.env');
 
 loadEnvFile();
@@ -99,6 +101,9 @@ function validateRuntimeConfig() {
   }
   if (config.corsAllowedOrigins.length === 0) {
     errors.push('CORS_ALLOWED_ORIGINS must include your public production URL');
+  }
+  if (IS_VERCEL && !config.googleAppsScriptUrl) {
+    errors.push('GOOGLE_APPS_SCRIPT_URL is required on Vercel because local files are ephemeral');
   }
 
   if (errors.length > 0) {
@@ -845,6 +850,13 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'POST' && url.pathname === '/api/admin/products') {
     if (!requireAdmin(req, res)) return;
+    if (IS_VERCEL) {
+      sendJson(res, 501, {
+        ok: false,
+        error: 'Product editing is disabled on Vercel because serverless files are not persistent'
+      });
+      return;
+    }
     const product = validateProduct(await parseJsonBody(req));
     const products = await readJson(PRODUCTS_FILE, []);
     const existingIndex = products.findIndex((item) => item.id === product.id);
@@ -934,7 +946,7 @@ async function serveStatic(req, res, url) {
   }
 }
 
-const server = http.createServer(async (req, res) => {
+async function requestHandler(req, res) {
   try {
     req.setTimeout(15_000);
     applyCors(req, res);
@@ -953,28 +965,34 @@ const server = http.createServer(async (req, res) => {
     console.error(error);
     sendError(res, error.statusCode || 500, error.message || 'Internal server error');
   }
-});
+}
 
 validateRuntimeConfig();
 setInterval(cleanupRateBuckets, 60_000).unref();
 setInterval(cleanupSessions, ONE_HOUR).unref();
 
-server.listen(config.port, () => {
-  console.log(`Flambeau backend running on http://localhost:${config.port}`);
-  if (config.adminPassword === 'change-this-password') {
-    console.warn('Set ADMIN_PASSWORD in .env before production use.');
-  }
-  if (!config.googleAppsScriptUrl && (!config.googleSheetId || !config.googleClientEmail || !config.googlePrivateKey)) {
-    console.warn('Google Sheets sync disabled: set GOOGLE_APPS_SCRIPT_URL or service account values in .env.');
-  }
-});
+if (require.main === module) {
+  const server = http.createServer(requestHandler);
 
-function shutdown(signal) {
-  console.log(`${signal} received, closing server...`);
-  server.close(() => {
-    process.exit(0);
+  server.listen(config.port, () => {
+    console.log(`Flambeau backend running on http://localhost:${config.port}`);
+    if (config.adminPassword === 'change-this-password') {
+      console.warn('Set ADMIN_PASSWORD in .env before production use.');
+    }
+    if (!config.googleAppsScriptUrl && (!config.googleSheetId || !config.googleClientEmail || !config.googlePrivateKey)) {
+      console.warn('Google Sheets sync disabled: set GOOGLE_APPS_SCRIPT_URL or service account values in .env.');
+    }
   });
+
+  function shutdown(signal) {
+    console.log(`${signal} received, closing server...`);
+    server.close(() => {
+      process.exit(0);
+    });
+  }
+
+  process.on('SIGTERM', () => shutdown('SIGTERM'));
+  process.on('SIGINT', () => shutdown('SIGINT'));
 }
 
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
+module.exports = requestHandler;

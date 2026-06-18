@@ -25,6 +25,33 @@ GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/xxx/exec
 
 `PORT` est souvent fourni automatiquement par l'hebergeur.
 
+## Vercel
+
+Le fichier `vercel.json` est pret:
+
+- `/api/*` est envoye vers `server/index.js`.
+- Les pages HTML/CSS/JS/images sont servies depuis `public/`.
+- `server/index.js` exporte un handler serverless pour Vercel et continue de fonctionner avec `npm start` en local.
+
+Variables a ajouter dans Vercel Project Settings -> Environment Variables:
+
+```env
+NODE_ENV=production
+ADMIN_PASSWORD=remplacer-par-un-secret-fort
+SESSION_SECRET=remplacer-par-une-cle-random-longue
+CORS_ALLOWED_ORIGINS=https://votre-projet.vercel.app
+TRUST_PROXY=true
+GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/xxx/exec
+```
+
+Le disque Vercel est ephemere. Les commandes doivent etre envoyees a Google Apps Script pour etre conservees durablement. L'ajout de produits depuis `/admin.html` est donc desactive sur Vercel.
+
+Commande de verification apres deploiement:
+
+```text
+https://votre-projet.vercel.app/api/health
+```
+
 ## Render
 
 Le fichier `render.yaml` est pret:

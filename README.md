@@ -18,7 +18,7 @@ Ouvrir ensuite `http://localhost:3000`.
 npm run check
 ```
 
-## Deploiement
+## Deploiement Vercel
 
 Avant production, configurez au minimum:
 
@@ -26,12 +26,13 @@ Avant production, configurez au minimum:
 NODE_ENV=production
 ADMIN_PASSWORD=un-mot-de-passe-long-et-unique
 SESSION_SECRET=une-cle-aleatoire-de-plus-de-32-caracteres
-CORS_ALLOWED_ORIGINS=https://votre-domaine.com
+CORS_ALLOWED_ORIGINS=https://votre-projet.vercel.app
 TRUST_PROXY=true
+GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/xxx/exec
 ```
 
-Pour les commandes et contacts, configurez aussi `GOOGLE_APPS_SCRIPT_URL`.
+Le fichier `vercel.json` route `/api/*` vers le backend Node serverless et sert les pages depuis `public/`.
 
-La configuration Render est fournie dans `render.yaml`. Le health check est `GET /api/health`.
+Important: sur Vercel, le disque local n'est pas durable. `GOOGLE_APPS_SCRIPT_URL` est obligatoire pour conserver les commandes et recevoir les contacts.
 
 Documentation detaillee: `docs/DEPLOYMENT.md`.

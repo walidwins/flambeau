@@ -1,0 +1,538 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Contactez Flambeau - Nous répondons à toutes vos questions sur nos bougies, fondants et bakhour de luxe.">
+  <title>Contact | Flambeau</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400&family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+
+  <!-- Favicon -->
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>F</text></svg>">
+
+  <style>
+    .contact-hero {
+      background: linear-gradient(135deg, var(--color-cream) 0%, var(--color-beige) 100%);
+      padding: var(--space-3xl) var(--space-md);
+      text-align: center;
+      border-bottom: 1px solid var(--color-sand);
+    }
+
+    .contact-hero__title {
+      font-size: 3rem;
+      margin-bottom: var(--space-sm);
+      color: var(--color-charcoal);
+      font-family: var(--font-display);
+    }
+
+    .contact-hero__subtitle {
+      font-size: 1.1rem;
+      color: var(--color-warm-gray);
+      max-width: 500px;
+      margin: 0 auto;
+    }
+
+    .contact-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-2xl);
+      padding: var(--space-2xl) var(--space-md);
+      max-width: var(--container-max);
+      margin: 0 auto;
+    }
+
+    .contact-form-section {
+      background: var(--color-white);
+      padding: var(--space-lg);
+      border-radius: 2px;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .contact-form-section__title {
+      font-size: 1.5rem;
+      font-family: var(--font-display);
+      color: var(--color-charcoal);
+      margin-bottom: var(--space-lg);
+      border-bottom: 2px solid var(--color-champagne);
+      padding-bottom: var(--space-md);
+    }
+
+    .form-group {
+      margin-bottom: var(--space-md);
+    }
+
+    .form-group label {
+      display: block;
+      font-weight: 500;
+      color: var(--color-charcoal);
+      margin-bottom: var(--space-xs);
+      font-size: 0.95rem;
+    }
+
+    .form-group input,
+    .form-group textarea {
+      width: 100%;
+      padding: var(--space-sm);
+      border: 1px solid var(--color-sand);
+      border-radius: 2px;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      color: var(--color-charcoal);
+      transition: border-color var(--transition-fast);
+    }
+
+    .form-group input:focus,
+    .form-group textarea:focus {
+      outline: none;
+      border-color: var(--color-champagne);
+      box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+    }
+
+    .form-group textarea {
+      resize: vertical;
+      min-height: 120px;
+    }
+
+    .form-group input::placeholder,
+    .form-group textarea::placeholder {
+      color: var(--color-warm-gray);
+      opacity: 0.7;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--space-md);
+    }
+
+    .form-row .form-group {
+      margin-bottom: 0;
+    }
+
+    .btn-submit {
+      width: 100%;
+      padding: var(--space-md) var(--space-lg);
+      background: linear-gradient(135deg, var(--color-champagne), var(--color-gold-muted));
+      color: var(--color-white);
+      font-weight: 600;
+      font-size: 1rem;
+      border: none;
+      border-radius: 2px;
+      cursor: pointer;
+      transition: all var(--transition-base);
+      font-family: var(--font-body);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .btn-submit:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .btn-submit.loading {
+      position: relative;
+      color: transparent;
+    }
+
+    .btn-submit.loading::after {
+      content: '';
+      position: absolute;
+      width: 16px;
+      height: 16px;
+      top: 50%;
+      left: 50%;
+      margin-left: -8px;
+      margin-top: -8px;
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 0.6s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .form-message {
+      padding: var(--space-md);
+      border-radius: 2px;
+      margin-bottom: var(--space-md);
+      display: none;
+      animation: slideDown 300ms ease-out;
+    }
+
+    .form-message.success {
+      background-color: #e8f5e9;
+      color: #2e7d32;
+      border-left: 4px solid #4caf50;
+      display: block;
+    }
+
+    .form-message.error {
+      background-color: #ffebee;
+      color: #c62828;
+      border-left: 4px solid #f44336;
+      display: block;
+    }
+
+    @keyframes slideDown {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .contact-info-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-xl);
+    }
+
+    .contact-card {
+      background: var(--color-white);
+      padding: var(--space-lg);
+      border-radius: 2px;
+      box-shadow: var(--shadow-sm);
+      text-align: center;
+      transition: all var(--transition-base);
+    }
+
+    .contact-card:hover {
+      transform: translateY(-4px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .contact-card__icon {
+      font-size: 2.5rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .contact-card__title {
+      font-family: var(--font-display);
+      font-size: 1.3rem;
+      color: var(--color-charcoal);
+      margin-bottom: var(--space-sm);
+    }
+
+    .contact-card__text {
+      color: var(--color-warm-gray);
+      font-size: 0.95rem;
+      margin-bottom: var(--space-md);
+    }
+
+    .contact-card__link {
+      display: inline-block;
+      color: var(--color-champagne);
+      font-weight: 600;
+      text-decoration: none;
+      border-bottom: 2px solid var(--color-champagne);
+      padding-bottom: 2px;
+      transition: all var(--transition-fast);
+    }
+
+    .contact-card__link:hover {
+      color: var(--color-gold-muted);
+      border-bottom-color: var(--color-gold-muted);
+    }
+
+    .social-links {
+      display: flex;
+      gap: var(--space-md);
+      justify-content: center;
+      margin-top: var(--space-lg);
+    }
+
+    .social-link {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      background: var(--color-beige);
+      border-radius: 50%;
+      color: var(--color-charcoal);
+      text-decoration: none;
+      font-size: 1.3rem;
+      transition: all var(--transition-fast);
+    }
+
+    .social-link:hover {
+      background: var(--color-champagne);
+      color: var(--color-white);
+      transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+      .contact-container {
+        grid-template-columns: 1fr;
+        gap: var(--space-lg);
+        padding: var(--space-lg) var(--space-sm);
+      }
+
+      .form-row {
+        grid-template-columns: 1fr;
+      }
+
+      .contact-hero__title {
+        font-size: 2rem;
+      }
+    }
+  </style>
+</head>
+<body data-page="contact">
+  <!-- Navigation -->
+    <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <a href="index.html" class="nav__logo" aria-label="Flambeau - Accueil">FLAMBEAU</a>
+
+      <ul class="nav__menu">
+        <li><a href="index.html" class="nav__link">Accueil</a></li>
+        <li><a href="shop.html" class="nav__link">Boutique</a></li>
+        <li><a href="contact.html" class="nav__link nav__link--active">Contact</a></li>
+      </ul>
+
+      <div class="nav__actions">
+        <button class="nav__cart-btn" aria-label="Panier">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/>
+            <line x1="3" y1="6" x2="21" y2="6"/>
+            <path d="M16 10a4 4 0 01-8 0"/>
+          </svg>
+          <span class="nav__cart-count" aria-live="polite">0</span>
+        </button>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Hero Section -->
+  <header class="contact-hero">
+    <h1 class="contact-hero__title">Nous vous écoutons</h1>
+    <p class="contact-hero__subtitle">Une question ? Un retour ? Contactez notre équipe Flambeau. Nous vous répondrons dans les 24 heures.</p>
+  </header>
+
+  <main id="main">
+    <div class="contact-container">
+      <!-- Contact Form -->
+      <section class="contact-form-section" aria-label="Formulaire de contact">
+        <h2 class="contact-form-section__title">Nous contacter</h2>
+
+        <div id="form-message" class="form-message"></div>
+
+        <form id="contact-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="prenom">Prénom *</label>
+              <input
+                type="text"
+                id="prenom"
+                name="prenom"
+                placeholder="Votre prénom"
+                required
+                minlength="2"
+                maxlength="50"
+              >
+            </div>
+            <div class="form-group">
+              <label for="nom">Nom *</label>
+              <input
+                type="text"
+                id="nom"
+                name="nom"
+                placeholder="Votre nom"
+                required
+                minlength="2"
+                maxlength="50"
+              >
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email *</label>
+            <input
+              type="email"
+              id="email"
+              name="email"
+              placeholder="votre.email@exemple.com"
+              required
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="telephone">Téléphone (optionnel)</label>
+            <input
+              type="tel"
+              id="telephone"
+              name="telephone"
+              placeholder="06 XX XX XX XX"
+              pattern="[0-9\s\+\-]+"
+              maxlength="20"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="sujet">Sujet *</label>
+            <input
+              type="text"
+              id="sujet"
+              name="sujet"
+              placeholder="Sujet de votre message"
+              required
+              minlength="5"
+              maxlength="100"
+            >
+          </div>
+
+          <div class="form-group">
+            <label for="message">Message *</label>
+            <textarea
+              id="message"
+              name="message"
+              placeholder="Écrivez votre message ici... (minimum 20 caractères)"
+              required
+              minlength="20"
+              maxlength="2000"
+            ></textarea>
+          </div>
+
+          <button type="submit" class="btn-submit" id="submit-btn">Envoyer le message</button>
+        </form>
+      </section>
+
+      <!-- Contact Info -->
+      <aside class="contact-info-section" aria-label="Informations de contact">
+        <!-- Direct Email -->
+        <div class="contact-card">
+          <div class="contact-card__icon">&#9993;</div>
+          <h3 class="contact-card__title">Email</h3>
+          <p class="contact-card__text">Pour toute demande commerciale ou partenariat</p>
+          <a href="mailto:flambeaushop@gmail.com" class="contact-card__link">flambeaushop@gmail.com</a>
+        </div>
+
+        <!-- WhatsApp -->
+        <div class="contact-card">
+          <div class="contact-card__icon">WA</div>
+          <h3 class="contact-card__title">WhatsApp</h3>
+          <p class="contact-card__text">Chat direct avec notre équipe (réponse rapide)</p>
+          <a href="https://wa.me/212728324374" class="contact-card__link" target="_blank" rel="noopener noreferrer">Ouvrir WhatsApp</a>
+        </div>
+
+        <!-- Social Media -->
+        <div class="contact-card">
+          <div class="contact-card__icon">@</div>
+          <h3 class="contact-card__title">Réseaux sociaux</h3>
+          <p class="contact-card__text">Suivez notre actualité et tendances</p>
+          <div class="social-links">
+            <a href="https://instagram.com/flambeau.ma" class="social-link" title="Instagram" target="_blank" rel="noopener noreferrer">IG</a>
+            <a href="https://facebook.com/flambeau" class="social-link" title="Facebook" target="_blank" rel="noopener noreferrer">f</a>
+            <a href="https://tiktok.com/@flambeau.ma" class="social-link" title="TikTok" target="_blank" rel="noopener noreferrer">TT</a>
+          </div>
+        </div>
+
+        <!-- Hours -->
+        <div class="contact-card">
+          <div class="contact-card__icon">09</div>
+          <h3 class="contact-card__title">Heures de réponse</h3>
+          <p class="contact-card__text">Du lundi au vendredi</p>
+          <p style="color: var(--color-charcoal); font-weight: 600;">09h00 - 18h00</p>
+        </div>
+      </aside>
+    </div>
+  </main>
+
+  <!-- Footer -->
+  <footer class="footer" role="contentinfo">
+    <div class="container">
+      <div class="footer__grid">
+        <div class="footer__brand">
+          <h2 class="footer__logo">FLAMBEAU</h2>
+          <p class="footer__tagline">L'art de la haute parfumerie, créateur d'ambiances luxueuses depuis 2019.</p>
+        </div>
+        <div class="footer__column">
+                    <h3 class="footer__title">Boutique</h3>
+          <nav class="footer__links">
+            <a href="shop.html" class="footer__link">Toutes nos créations</a>
+            <a href="shop.html#fondants" class="footer__link">Fondants</a>
+            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
+            <a href="shop.html#bakhour" class="footer__link">Bakhour</a>
+            <a href="shop.html#diffuseurs" class="footer__link">Diffuseurs</a>
+            <a href="shop.html#poudre-parfumee" class="footer__link">Poudre parfumée</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Aide</h3>
+          <nav class="footer__links">
+            <a href="#" class="footer__link">Livraison</a>
+            <a href="#" class="footer__link">Retours</a>
+            <a href="contact.html" class="footer__link">Contact</a>
+          </nav>
+        </div>
+        <div class="footer__column">
+          <h3 class="footer__title">Contact</h3>
+          <nav class="footer__links">
+            <a href="https://wa.me/212728324374" class="footer__link" target="_blank" rel="noopener noreferrer">WhatsApp</a>
+            <a href="https://instagram.com/flambeau.ma" class="footer__link" target="_blank" rel="noopener noreferrer">Instagram @flambeau.ma</a>
+          </nav>
+        </div>
+      </div>
+      <div class="footer__bottom">
+        <p>&copy; 2025 Flambeau. Tous droits réservés.</p>
+        <div class="footer__legal">
+          <a href="#" class="footer__link">Mentions légales</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <div class="cart-overlay" aria-hidden="true"></div>
+  <aside class="cart-drawer" role="dialog" aria-label="Panier">
+    <header class="cart-drawer__header">
+      <h2 class="cart-drawer__title">Votre Panier</h2>
+      <button class="cart-drawer__close" aria-label="Fermer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </header>
+    <div class="cart-drawer__empty">
+      <svg class="cart-drawer__empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1"><path d="M6 2L3 6v14a2 2 0 002 2h14a2 2 0 002-2V6l-3-4z"/><line x1="3" y1="6" x2="21" y2="6"/><path d="M16 10a4 4 0 01-8 0"/></svg>
+      <h3 class="cart-drawer__empty-title">Votre panier est vide</h3>
+      <p class="cart-drawer__empty-text">Découvrez nos créations luxueuses</p>
+      <a href="shop.html" class="btn btn--primary">Visiter la boutique</a>
+    </div>
+    <div class="cart-drawer__items"></div>
+    <footer class="cart-drawer__footer">
+      <div class="cart-drawer__subtotal">
+        <span class="cart-drawer__subtotal-label">Sous-total</span>
+        <span class="cart-drawer__subtotal-value">0,00 DH</span>
+      </div>
+      <button class="cart-drawer__checkout" onclick="window.location.href='cart.html'">Commander</button>
+    </footer>
+  </aside>
+
+  <div id="toast-container"></div>
+
+  <script src="js/app.js"></script>
+  <script src="js/contact.js"></script>
+</body>
+</html>
+
+
+
+
+

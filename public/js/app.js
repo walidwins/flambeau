@@ -1,10 +1,10 @@
-// ========================================
+﻿// ========================================
 // FLAMBEAU — Script unifié (sans modules ES6)
 // Compatible ouverture directe file://
 // ========================================
 
 // ---- PRODUITS ----
-const PRODUCTS = [
+var PRODUCTS = [
   { id: 'B001', name: "Fleur d'Oranger", category: 'bougies', categoryLabel: 'Bougies', price: 35,
     description: "Une bougie majestueuse qui capture l'essence florale de la fleur d'oranger, illuminant votre intérieur de sa fraîcheur délicate et sophistiquée.",
     notes: ["Fleur d'oranger", 'Jasmin', 'Bois de santal'], weight: '300g',
@@ -53,26 +53,212 @@ const PRODUCTS = [
     stock: 15,
     image: 'imgs/elegant-golden-butterfly-bakhour-burner-set.jpg', inStock: true },
 
-  { id: 'A001', name: 'Boîtier Bakhour Élégant', category: 'accessoires', categoryLabel: 'Accessoires', price: 28,
-    description: "Un boîtier à bakhour raffiné en métal doré, alliant fonctionnalité et élégance pour sublimer votre rituel olfactif.",
-    notes: ['Métal doré'], weight: 'Unique',
+  { id: 'D001', name: 'Diffuseur Élégant', category: 'diffuseurs', categoryLabel: 'Diffuseurs', price: 28,
+    description: "Un diffuseur raffiné pour diffuser votre parfum préféré avec élégance.",
+    notes: ['Parfum au choix'], weight: 'Unique',
     stock: 10,
     image: 'imgs/elegant-gold-bakhour-incense-burner-home-decor.jpg', inStock: true },
 
-  { id: 'A002', name: 'Coupes en Marbre', category: 'accessoires', categoryLabel: 'Accessoires', price: 35,
-    description: "Des coupes à chandelles taillées dans la pierre naturelle, pièces uniques qui apportent une touche minérale et luxueuse.",
-    notes: ['Pierre naturelle'], weight: 'Unique',
+  { id: 'PP001', name: 'Poudre Parfumée', category: 'poudre-parfumee', categoryLabel: 'Poudre parfumée', price: 35,
+    description: "Une poudre parfumée délicate à personnaliser avec la fragrance de votre choix.",
+    notes: ['Parfum au choix'], weight: '100g',
     stock: 15,
     image: 'imgs/white-onyx-marble-candle-holders-luxury-decor.jpg', inStock: true }
 ];
 
-function getProductById(id) { return PRODUCTS.find(p => p.id === id); }
-function getProductsByCategory(cat) { return cat === 'all' ? PRODUCTS : PRODUCTS.filter(p => p.category === cat); }
+var PRODUCTS_CACHE_KEY = 'flambeau_products_cache_v1';
+var DEFAULT_PRODUCT_IMAGE = 'imgs/aery-good-vibes-premium-scented-candle-packaging.jpg';
+var DEFAULT_FRAGRANCES = [
+  'Oud',
+  'Musc',
+  'Ambre',
+  'Vanille',
+  "Fleur d'oranger",
+  'Rose',
+  'Gardenia',
+  'Herbal',
+  'Magnolia précieuse',
+  'Fruits rouges',
+  'Lavande',
+  'Thé vert',
+  'Jasmin de damas',
+  'Chocolat noir',
+  'Cannelle orange',
+  'Citron',
+  'Caramel',
+  'Bois de oud',
+  'Orchidée',
+  'Khalij',
+  'Ylang ylang',
+  'Cerise'
+];
+var FRAGRANCE_CATEGORIES = ['fondants', 'bougies', 'bakhour', 'boukhour', 'poudre', 'poudre-parfumee'];
+var PRODUCT_USAGE_CATEGORIES = ['fondants', 'bougies', 'bakhour', 'boukhour', 'diffuseurs', 'poudre', 'poudre-parfumee'];
+
+function normalizeCategoryName(value) {
+  return String(value || '').toLowerCase().replace(/\s+/g, '-');
+}
+
+function requiresFragranceChoice(product) {
+  return product && FRAGRANCE_CATEGORIES.indexOf(normalizeCategoryName(product.category)) !== -1;
+}
+
+function getProductFragrances(product) {
+  if (product && Array.isArray(product.fragrances) && product.fragrances.length > 0) {
+    return product.fragrances;
+  }
+  return DEFAULT_FRAGRANCES;
+}
+
+function escapeHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
+}
+
+function safeImageUrl(value) {
+  var url = String(value || '').trim();
+  if (!url) return DEFAULT_PRODUCT_IMAGE;
+  if (/^imgs\/[-a-zA-Z0-9_./]+$/.test(url)) return url;
+  if (/^https:\/\/[^\s"'<>]+$/i.test(url)) return url;
+  return DEFAULT_PRODUCT_IMAGE;
+}
+
+function safeProductId(value) {
+  return encodeURIComponent(String(value || ''));
+}
+
+function readCachedProducts() {
+  try {
+    var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
+    if (!raw) return [];
+    var cached = JSON.parse(raw);
+    if (!cached || !Array.isArray(cached.products)) return [];
+    if (Date.now() - cached.savedAt > 10 * 60 * 1000) return [];
+    return cached.products;
+  } catch(e) {
+    return [];
+  }
+}
+
+function saveCachedProducts(products) {
+  try {
+    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({
+      savedAt: Date.now(),
+      products: products
+    }));
+  } catch(e) {}
+}
+
+function loadProductsFromBackend(callback) {
+  var done = false;
+
+  function finish() {
+    if (done) return;
+    done = true;
+    callback();
+  }
+
+  var fallbackTimer = setTimeout(function() {
+    console.warn('Chargement API trop long, affichage des produits locaux');
+    finish();
+  }, 2500);
+
+  var cachedProducts = readCachedProducts();
+  if (cachedProducts.length > 0) {
+    PRODUCTS = cachedProducts;
+    setTimeout(finish, 0);
+  }
+
+  function normalizeProducts(products) {
+    if (products && Array.isArray(products.products)) {
+      products = products.products;
+    } else if (products && Array.isArray(products.data)) {
+      products = products.data;
+    }
+
+    if (!Array.isArray(products)) {
+      return [];
+    }
+
+    return products
+      .filter(function(p) {
+        var id = p.id || p.ID || p.Id;
+        var name = p.name || p.nom || p.Nom || p.Name;
+        var price = p.price || p.prix || p.Prix || p.Price;
+        var image = p.image || p.Image || p.imageUrl || p.url || p.URL;
+        return id && name && price && image;
+      })
+      .map(function(p) {
+        var category = p.category || p.categorie || p['catégorie'] || p.Category || 'bougies';
+        var notes = p.notes || p.Notes || '';
+        var fragrances = p.fragrances || p.Fragrances || p.parfums || p.Parfums || '';
+        return {
+          id: String(p.id || p.ID || p.Id),
+          name: String(p.name || p.nom || p.Nom || p.Name),
+          category: String(category).toLowerCase(),
+          categoryLabel: p.categoryLabel || p.CategoryLabel || p.label || p.Label || category || 'Bougies',
+          price: Number(p.price || p.prix || p.Prix || p.Price || 0),
+          description: p.description || p.Description || '',
+          notes: Array.isArray(notes)
+            ? notes
+            : String(notes || '').split(',').map(function(n) {
+                return n.trim();
+              }).filter(Boolean),
+          fragrances: Array.isArray(fragrances)
+            ? fragrances.map(function(n) { return String(n).trim(); }).filter(Boolean)
+            : String(fragrances || '').split(',').map(function(n) {
+                return n.trim();
+              }).filter(Boolean),
+          weight: p.weight || p.poids || p.Poids || '',
+          stock: Number(p.stock || p.Stock || 0),
+          image: safeImageUrl(p.image || p.Image || p.imageUrl || p.url || p.URL || ''),
+          inStock: String(p.inStock).toUpperCase() !== 'FALSE'
+        };
+      });
+  }
+
+  fetch('/api/products')
+    .then(function(response) {
+      if (!response.ok) throw new Error('API produits indisponible');
+      return response.json();
+    })
+    .then(function(products) {
+      var cleanProducts = normalizeProducts(products);
+      if (cleanProducts.length > 0) {
+        clearTimeout(fallbackTimer);
+        PRODUCTS = cleanProducts;
+        saveCachedProducts(cleanProducts);
+      }
+      finish();
+    })
+    .catch(function(error) {
+      clearTimeout(fallbackTimer);
+      console.warn('Impossible de charger les produits depuis le backend:', error);
+      finish();
+    });
+}
+
+function getProductById(id) {
+  return PRODUCTS.find(function(p) {
+    return p.id === id;
+  });
+}
+function getProductsByCategory(cat) {
+  return cat === 'all' ? PRODUCTS : PRODUCTS.filter(function(p) {
+    return p.category === cat;
+  });
+}
 function getFeaturedProducts() { return PRODUCTS.slice(0, 4); }
 function getRelatedProducts(id, limit) {
   var p = getProductById(id);
   if (!p) return [];
-  return PRODUCTS.filter(x => x.id !== id && x.category === p.category).slice(0, limit || 4);
+  return PRODUCTS.filter(function(x) {
+    return x.id !== id && x.category === p.category;
+  }).slice(0, limit || 4);
 }
 
 // ---- PANIER (localStorage) ----
@@ -85,24 +271,45 @@ function saveCart(cart) {
   cart.updatedAt = Date.now();
   try { localStorage.setItem(CART_KEY, JSON.stringify(cart)); } catch(e) {}
 }
-function addToCart(productId, qty) {
+function getItemFragrance(item) {
+  return item ? String(item.fragrance || item.parfum || '').trim() : '';
+}
+
+function addToCart(productId, qty, fragrance) {
   var cart = getCart();
-  var item = cart.items.find(function(i){ return i.productId === productId; });
-  if (item) { item.quantity += (qty || 1); }
-  else { cart.items.push({ productId: productId, quantity: qty || 1 }); }
+  fragrance = String(fragrance || '').trim();
+  var item = cart.items.find(function(i){
+    return i.productId === productId && getItemFragrance(i) === fragrance;
+  });
+  if (item) {
+    item.quantity += (qty || 1);
+    item.fragrance = fragrance;
+    delete item.parfum;
+  }
+  else { cart.items.push({ productId: productId, quantity: qty || 1, fragrance: fragrance }); }
   saveCart(cart);
   return cart;
 }
-function removeFromCart(productId) {
+function removeFromCart(productId, fragrance) {
+  fragrance = String(fragrance || '').trim();
   var cart = getCart();
-  cart.items = cart.items.filter(function(i){ return i.productId !== productId; });
+  cart.items = cart.items.filter(function(i){
+    return !(i.productId === productId && getItemFragrance(i) === fragrance);
+  });
   saveCart(cart); return cart;
 }
-function updateQuantity(productId, quantity) {
+function updateQuantity(productId, quantity, fragrance) {
+  fragrance = String(fragrance || '').trim();
   var cart = getCart();
-  var item = cart.items.find(function(i){ return i.productId === productId; });
+  var item = cart.items.find(function(i){
+    return i.productId === productId && getItemFragrance(i) === fragrance;
+  });
   if (item) {
-    if (quantity <= 0) { cart.items = cart.items.filter(function(i){ return i.productId !== productId; }); }
+    if (quantity <= 0) {
+      cart.items = cart.items.filter(function(i){
+        return !(i.productId === productId && getItemFragrance(i) === fragrance);
+      });
+    }
     else { item.quantity = quantity; }
   }
   saveCart(cart); return cart;
@@ -121,7 +328,7 @@ function getCartItemCount(cart) {
   return cart.items.reduce(function(n, i){ return n + i.quantity; }, 0);
 }
 function formatPrice(price) {
-  return price.toFixed(2).replace('.', ',') + ' €';
+  return Number(price || 0).toFixed(2).replace('.', ',') + ' DH';
 }
 
 // ---- TOAST ----
@@ -131,7 +338,7 @@ function showToast(message) {
   var toast = document.createElement('div');
   toast.className = 'toast';
   toast.innerHTML = '<svg class="toast__icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg>'
-    + '<span class="toast__message">' + message + '</span>'
+    + '<span class="toast__message">' + escapeHtml(message) + '</span>'
     + '<button class="toast__close" aria-label="Fermer"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 6L6 18M6 6l12 12"/></svg></button>';
   document.body.appendChild(toast);
   requestAnimationFrame(function(){ toast.classList.add('toast--visible'); });
@@ -187,10 +394,12 @@ function renderCartDrawer() {
   itemsEl.innerHTML = cart.items.map(function(item) {
     var p = getProductById(item.productId);
     if (!p) return '';
-    return '<div class="cart-item" data-id="' + item.productId + '">'
-      + '<div class="cart-item__image"><img src="' + p.image + '" alt="' + p.name + '" loading="lazy"></div>'
+    var fragrance = getItemFragrance(item);
+    return '<div class="cart-item" data-id="' + escapeHtml(item.productId) + '" data-fragrance="' + escapeHtml(fragrance) + '">'
+      + '<div class="cart-item__image"><img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy"></div>'
       + '<div class="cart-item__details">'
-      + '<div class="cart-item__name">' + p.name + '</div>'
+      + '<div class="cart-item__name">' + escapeHtml(p.name) + '</div>'
+      + (fragrance ? '<div class="cart-item__fragrance">Parfum choisi : ' + escapeHtml(fragrance) + '</div>' : '')
       + '<div class="cart-item__price">' + formatPrice(p.price) + '</div>'
       + '<div class="cart-item__controls">'
       + '<div class="cart-item__quantity">'
@@ -205,17 +414,18 @@ function renderCartDrawer() {
   // events
   itemsEl.querySelectorAll('.cart-item').forEach(function(el) {
     var pid = el.dataset.id;
+    var fragrance = el.dataset.fragrance || '';
     el.querySelector('[data-action="decrease"]').addEventListener('click', function(){
-      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid;});
-      if(it){ updateQuantity(pid, it.quantity - 1); renderCartDrawer(); }
+      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid && getItemFragrance(i) === fragrance;});
+      if(it){ updateQuantity(pid, it.quantity - 1, fragrance); renderCartDrawer(); }
     });
     el.querySelector('[data-action="increase"]').addEventListener('click', function(){
-      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid;});
-      if(it){ updateQuantity(pid, it.quantity + 1); renderCartDrawer(); }
+      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid && getItemFragrance(i) === fragrance;});
+      if(it){ updateQuantity(pid, it.quantity + 1, fragrance); renderCartDrawer(); }
     });
     el.querySelector('[data-action="remove"]').addEventListener('click', function(){
       var p = getProductById(pid);
-      removeFromCart(pid);
+      removeFromCart(pid, fragrance);
       renderCartDrawer();
       showToast((p ? p.name : 'Produit') + ' retiré du panier');
     });
@@ -254,6 +464,15 @@ function initNav() {
     toggle.addEventListener('click', function() {
       var open = menu.classList.toggle('nav__menu--open');
       toggle.setAttribute('aria-expanded', open);
+      document.body.classList.toggle('nav-open', open);
+    });
+
+    menu.querySelectorAll('a').forEach(function(link) {
+      link.addEventListener('click', function() {
+        menu.classList.remove('nav__menu--open');
+        toggle.setAttribute('aria-expanded', 'false');
+        document.body.classList.remove('nav-open');
+      });
     });
   }
 
@@ -278,14 +497,14 @@ function initHome() {
     var featured = getFeaturedProducts();
     grid.innerHTML = featured.map(function(p, i) {
       return '<article class="product-card reveal reveal-delay-' + (i+1) + '">'
-        + '<a href="product.html?id=' + p.id + '">'
+        + '<a href="product.html?id=' + safeProductId(p.id) + '">'
         + '<div class="product-card__image-container">'
-        + '<img src="' + p.image + '" alt="' + p.name + '" class="product-card__image" loading="lazy">'
-        + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + p.id + '">Ajouter au panier</button></div>'
+        + '<img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" class="product-card__image" loading="lazy" decoding="async">'
+        + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '">' + (requiresFragranceChoice(p) ? 'Choisir parfum' : 'Ajouter au panier') + '</button></div>'
         + '</div>'
         + '<div class="product-card__info">'
-        + '<div class="product-card__category">' + p.categoryLabel + '</div>'
-        + '<h3 class="product-card__name">' + p.name + '</h3>'
+        + '<div class="product-card__category">' + escapeHtml(p.categoryLabel) + '</div>'
+        + '<h3 class="product-card__name">' + escapeHtml(p.name) + '</h3>'
         + '<div class="product-card__price">' + formatPrice(p.price) + '</div>'
         + '</div></a></article>';
     }).join('');
@@ -294,9 +513,14 @@ function initHome() {
       btn.addEventListener('click', function(e) {
         e.preventDefault(); e.stopPropagation();
         var id = btn.dataset.id;
+        var product = getProductById(id);
+        if (requiresFragranceChoice(product)) {
+          window.location.href = 'product.html?id=' + safeProductId(id);
+          return;
+        }
         addToCart(id, 1);
         renderCartDrawer();
-        showToast((getProductById(id).name) + ' ajouté au panier ✓');
+        showToast(product.name + ' ajouté au panier ✓');
         openCart();
       });
     });
@@ -350,17 +574,22 @@ function renderShopProducts(category) {
   var container = document.querySelector('.shop-products .products-grid');
   if (!container) return;
   var list = getProductsByCategory(category);
+  if (list.length === 0) {
+    container.innerHTML = '<div class="products-empty">Aucun produit disponible pour le moment.</div>';
+    return;
+  }
+
   container.innerHTML = list.map(function(p, i) {
     return '<article class="product-card reveal reveal-delay-' + ((i%4)+1) + '">'
-      + '<a href="product.html?id=' + p.id + '">'
+      + '<a href="product.html?id=' + safeProductId(p.id) + '">'
       + '<div class="product-card__image-container">'
-      + '<img src="' + p.image + '" alt="' + p.name + '" class="product-card__image" loading="lazy">'
+      + '<img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" class="product-card__image" loading="lazy" decoding="async">'
       + (!p.inStock ? '<span class="product-card__badge product-card__badge--soldout">Rupture</span>' : '')
-      + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + p.id + '">Ajouter au panier</button></div>'
+      + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '">' + (requiresFragranceChoice(p) ? 'Choisir parfum' : 'Ajouter au panier') + '</button></div>'
       + '</div>'
       + '<div class="product-card__info">'
-      + '<div class="product-card__category">' + p.categoryLabel + '</div>'
-      + '<h3 class="product-card__name">' + p.name + '</h3>'
+      + '<div class="product-card__category">' + escapeHtml(p.categoryLabel) + '</div>'
+      + '<h3 class="product-card__name">' + escapeHtml(p.name) + '</h3>'
       + '<div class="product-card__price">' + formatPrice(p.price) + '</div>'
       + '</div></a></article>';
   }).join('');
@@ -369,9 +598,14 @@ function renderShopProducts(category) {
     btn.addEventListener('click', function(e) {
       e.preventDefault(); e.stopPropagation();
       var id = btn.dataset.id;
+      var product = getProductById(id);
+      if (requiresFragranceChoice(product)) {
+        window.location.href = 'product.html?id=' + safeProductId(id);
+        return;
+      }
       addToCart(id, 1);
       renderCartDrawer();
-      showToast((getProductById(id).name) + ' ajouté au panier ✓');
+      showToast(product.name + ' ajouté au panier ✓');
       openCart();
     });
   });
@@ -379,12 +613,31 @@ function renderShopProducts(category) {
 }
 
 function initShop() {
-  renderShopProducts('all');
+  var initialCategory = window.location.hash ? window.location.hash.replace('#', '') : 'all';
+  var activeCategory = initialCategory || 'all';
   var btns = document.querySelectorAll('.filter-btn');
+  var hasCategory = false;
+  btns.forEach(function(btn) {
+    if (btn.dataset.category === activeCategory) {
+      hasCategory = true;
+    }
+  });
+  if (!hasCategory) {
+    activeCategory = 'all';
+  }
+  renderShopProducts(activeCategory);
+  btns.forEach(function(btn) {
+    btn.classList.toggle('filter-btn--active', btn.dataset.category === activeCategory);
+  });
   btns.forEach(function(btn) {
     btn.addEventListener('click', function() {
       btns.forEach(function(b){ b.classList.remove('filter-btn--active'); });
       btn.classList.add('filter-btn--active');
+      if (btn.dataset.category && btn.dataset.category !== 'all') {
+        window.location.hash = btn.dataset.category;
+      } else {
+        history.replaceState(null, '', window.location.pathname);
+      }
       renderShopProducts(btn.dataset.category);
     });
   });
@@ -401,24 +654,70 @@ function initProduct() {
   document.title = product.name + ' | Flambeau';
 
   var img = document.querySelector('.product-detail__main-image img');
-  if (img) { img.src = product.image; img.alt = product.name; }
+  if (img) { img.src = safeImageUrl(product.image); img.alt = product.name; }
 
   var catEl = document.querySelector('.product-detail__category');
   var titleEl = document.querySelector('.product-detail__title');
   var priceEl = document.querySelector('.product-detail__price');
   var descEl = document.querySelector('.product-detail__description');
   var notesEl = document.querySelector('.product-detail__notes-list');
-  var weightEl = document.querySelector('[data-weight]');
+  var detailsEl = document.querySelector('[data-product-details]');
+  var infoEl = document.querySelector('[data-product-info]');
+  var productCategory = normalizeCategoryName(product.category);
+  var showUsageInfo = PRODUCT_USAGE_CATEGORIES.indexOf(productCategory) !== -1;
 
   if (catEl) catEl.textContent = product.categoryLabel;
   if (titleEl) titleEl.textContent = product.name;
   if (priceEl) priceEl.textContent = formatPrice(product.price);
   if (descEl) descEl.textContent = product.description;
-  if (weightEl) weightEl.textContent = product.weight;
+  if (detailsEl) {
+    if (showUsageInfo) {
+      detailsEl.innerHTML =
+        '<section class="product-detail__summary" aria-label="Informations rapides produit">'
+        + '<div class="product-detail__summary-row"><strong>Poids :</strong> environ 12 g par fondant</div>'
+        + '<div class="product-detail__summary-row"><strong>Durée de diffusion :</strong> jusqu’à 10 heures</div>'
+        + '</section>';
+    } else {
+      detailsEl.innerHTML = '';
+    }
+  }
+  if (infoEl) {
+    if (showUsageInfo) {
+      infoEl.innerHTML =
+        '<section class="product-detail__usage">'
+        + '<h2 class="product-detail__usage-title">Mode d\'emploi</h2>'
+        + '<ul class="product-detail__usage-list">'
+        + '<li><strong>Utilisation :</strong> Placez votre fondant parfumé dans la coupelle du brûle-parfum, puis insérez une bougie chauffe-plat allumée en dessous pour diffuser la senteur.</li>'
+        + '<li><strong>Réutilisation :</strong> Un même fondant peut être utilisé à plusieurs reprises, selon l\'intensité du parfum.</li>'
+        + '<li><strong>Entretien :</strong> Lorsque le fondant ne diffuse plus d\'odeur, vous pouvez absorber la cire liquide avec un mouchoir. Si la cire est figée, placez le brûle-parfum au congélateur pendant 15 minutes : le bloc de cire se décollera facilement à l\'aide d\'une pointe de couteau ou d\'une cuillère.</li>'
+        + '</ul>'
+        + '<h3 class="product-detail__usage-subtitle">Composition et engagement qualité</h3>'
+        + '<p>Nos fondants sont le fruit d\'un travail artisanal réalisé avec soin au cœur de notre atelier à Oujda. Pour vous offrir une expérience olfactive saine et durable, nous avons sélectionné des matières premières rigoureuses :</p>'
+        + '<ul class="product-detail__usage-list">'
+        + '<li><strong>Cire de soja 100 % végétale :</strong> Sans OGM ni pesticides.</li>'
+        + '<li><strong>Parfums de qualité :</strong> Garantis sans substances toxiques pour préserver la qualité de l\'air dans votre maison.</li>'
+        + '<li><strong>Pigments naturels :</strong> Pour colorer nos créations tout en respectant notre engagement envers une composition naturelle.</li>'
+        + '</ul>'
+        + '</section>';
+    } else {
+      infoEl.innerHTML =
+        '<div class="product-detail__meta-item"><span>Poids :</span><span>' + escapeHtml(product.weight || '300g') + '</span></div>'
+        + '<div class="product-detail__meta-item"><span>Livraison :</span><span>2–5 jours ouvrés, partout au Maroc</span></div>'
+        + '<div class="product-detail__meta-item"><span>Fabrication :</span><span>Artisanale, cire naturelle, sans phtalates</span></div>';
+    }
+  }
   if (notesEl) {
-    notesEl.innerHTML = product.notes.map(function(n) {
-      return '<span class="product-detail__note">' + n + '</span>';
-    }).join('');
+    if (requiresFragranceChoice(product)) {
+      notesEl.closest('.product-detail__notes').style.display = '';
+      notesEl.innerHTML = '<select id="product-fragrance" class="product-detail__fragrance-select" required>'
+      + '<option value="">Choisissez votre parfum</option>'
+      + getProductFragrances(product).map(function(name) {
+        return '<option value="' + escapeHtml(name) + '">' + escapeHtml(name) + '</option>';
+      }).join('')
+      + '</select>';
+    } else {
+      notesEl.closest('.product-detail__notes').style.display = 'none';
+    }
   }
 
   var qty = 1;
@@ -430,9 +729,16 @@ function initProduct() {
   var addBtn = document.querySelector('.product-detail__add-btn');
   if (addBtn) {
     addBtn.addEventListener('click', function() {
-      addToCart(product.id, qty);
+      var fragranceSelect = document.getElementById('product-fragrance');
+      var fragrance = fragranceSelect ? fragranceSelect.value : '';
+      if (requiresFragranceChoice(product) && !fragrance) {
+        showToast('Choisissez votre parfum avant d’ajouter au panier');
+        if (fragranceSelect) fragranceSelect.focus();
+        return;
+      }
+      addToCart(product.id, qty, fragrance);
       renderCartDrawer();
-      showToast(product.name + ' ajouté au panier ✓');
+      showToast(product.name + (fragrance ? ' - ' + fragrance : '') + ' ajouté au panier ✓');
       openCart();
     });
   }
@@ -447,13 +753,13 @@ function initProduct() {
     } else {
       relGrid.innerHTML = related.map(function(p, i) {
         return '<article class="product-card reveal reveal-delay-' + (i+1) + '">'
-          + '<a href="product.html?id=' + p.id + '">'
+          + '<a href="product.html?id=' + safeProductId(p.id) + '">'
           + '<div class="product-card__image-container">'
-          + '<img src="' + p.image + '" alt="' + p.name + '" class="product-card__image" loading="lazy">'
-          + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + p.id + '">Ajouter au panier</button></div>'
+          + '<img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" class="product-card__image" loading="lazy" decoding="async">'
+          + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '">' + (requiresFragranceChoice(p) ? 'Choisir parfum' : 'Ajouter au panier') + '</button></div>'
           + '</div><div class="product-card__info">'
-          + '<div class="product-card__category">' + p.categoryLabel + '</div>'
-          + '<h3 class="product-card__name">' + p.name + '</h3>'
+          + '<div class="product-card__category">' + escapeHtml(p.categoryLabel) + '</div>'
+          + '<h3 class="product-card__name">' + escapeHtml(p.name) + '</h3>'
           + '<div class="product-card__price">' + formatPrice(p.price) + '</div>'
           + '</div></a></article>';
       }).join('');
@@ -461,9 +767,14 @@ function initProduct() {
         btn.addEventListener('click', function(e) {
           e.preventDefault(); e.stopPropagation();
           var pid = btn.dataset.id;
+          var product = getProductById(pid);
+          if (requiresFragranceChoice(product)) {
+            window.location.href = 'product.html?id=' + safeProductId(pid);
+            return;
+          }
           addToCart(pid, 1);
           renderCartDrawer();
-          showToast(getProductById(pid).name + ' ajouté au panier ✓');
+          showToast(product.name + ' ajouté au panier ✓');
           openCart();
         });
       });
@@ -501,11 +812,14 @@ function renderCartPage() {
     var p = getProductById(item.productId);
     if (!p) return;
     var div = document.createElement('div');
+    var fragrance = getItemFragrance(item);
     div.className = 'cart-page__item';
     div.dataset.id = item.productId;
-    div.innerHTML = '<div class="cart-page__item-image"><img src="' + p.image + '" alt="' + p.name + '" loading="lazy"></div>'
+    div.dataset.fragrance = fragrance;
+    div.innerHTML = '<div class="cart-page__item-image"><img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" loading="lazy" decoding="async"></div>'
       + '<div class="cart-page__item-details">'
-      + '<h3 class="cart-page__item-name">' + p.name + '</h3>'
+      + '<h3 class="cart-page__item-name">' + escapeHtml(p.name) + '</h3>'
+      + (fragrance ? '<div class="cart-page__item-fragrance">Parfum choisi : ' + escapeHtml(fragrance) + '</div>' : '')
       + '<div class="cart-page__item-price">' + formatPrice(p.price) + '</div>'
       + '<div class="cart-page__item-controls">'
       + '<div class="cart-page__item-quantity">'
@@ -522,16 +836,17 @@ function renderCartPage() {
 
   itemsEl.querySelectorAll('.cart-page__item').forEach(function(el) {
     var pid = el.dataset.id;
+    var fragrance = el.dataset.fragrance || '';
     el.querySelector('[data-action="decrease"]').addEventListener('click', function(){
-      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid;});
-      if(it){ updateQuantity(pid, it.quantity-1); renderCartPage(); renderCartDrawer(); }
+      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid && getItemFragrance(i) === fragrance;});
+      if(it){ updateQuantity(pid, it.quantity-1, fragrance); renderCartPage(); renderCartDrawer(); }
     });
     el.querySelector('[data-action="increase"]').addEventListener('click', function(){
-      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid;});
-      if(it){ updateQuantity(pid, it.quantity+1); renderCartPage(); renderCartDrawer(); }
+      var c = getCart(); var it = c.items.find(function(i){return i.productId===pid && getItemFragrance(i) === fragrance;});
+      if(it){ updateQuantity(pid, it.quantity+1, fragrance); renderCartPage(); renderCartDrawer(); }
     });
     el.querySelector('[data-action="remove"]').addEventListener('click', function(){
-      removeFromCart(pid);
+      removeFromCart(pid, fragrance);
       showToast('Produit retiré');
       renderCartPage(); renderCartDrawer();
     });
@@ -550,26 +865,32 @@ function renderCartPage() {
   if (totEl) totEl.textContent = formatPrice(total);
 }
 
-// ---- CONFIGURATION ----
-// Remplacez cette URL par celle de votre Google Apps Script déployé
-var GOOGLE_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbyucrRX5tA4JHFbYYXgRVCrKYI9mo1UTwTD6WnRB43j6WHm65THvAdpKgzVaBUduOuz/exec';
 function submitOrder(orderData) {
-  // Envoi vers Google Apps Script (Google Sheets + Gmail)
-  if (GOOGLE_SCRIPT_URL && GOOGLE_SCRIPT_URL !== 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
-    fetch(GOOGLE_SCRIPT_URL, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(orderData)
-    }).catch(function(err) { console.warn('Erreur envoi commande:', err); });
-  }
+  return fetch('/api/orders', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(orderData)
+  }).then(function(response) {
+    return response.json().then(function(data) {
+      if (!response.ok) {
+        throw new Error(data.error || 'Commande refusée par le serveur');
+      }
+      return data;
+    });
+  });
 }
 
 function initCart() {
   renderCartPage();
-  var btn = document.querySelector('.cart-page__checkout-btn');
-  if (btn) {
-    btn.addEventListener('click', function() {
+  var form = document.getElementById('orderForm');
+  if (form) {
+    form.addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      if (form.reportValidity && !form.reportValidity()) {
+        return;
+      }
+
       var cart = getCart();
       if (cart.items.length === 0) { showToast('Votre panier est vide'); return; }
 
@@ -584,30 +905,46 @@ function initCart() {
       var orderNum = 'FLB-' + Date.now().toString(36).toUpperCase();
       var orderItems = cart.items.map(function(item) {
         var p = getProductById(item.productId);
-        return { name: p ? p.name : 'Produit', price: p ? p.price : 0, qty: item.quantity };
+        return { productId: item.productId, name: p ? p.name : 'Produit', fragrance: getItemFragrance(item), price: p ? p.price : 0, qty: item.quantity };
       });
       var orderTotal = getCartTotal(cart);
 
       // Données complètes de la commande
       var orderData = {
-        orderNum:   orderNum,
-        date:       new Date().toLocaleString('fr-FR'),
-        nom:        nom,
-        prenom:     prenom,
-        telephone:  numero,
-        ville:      ville,
+        action: 'order',
+        orderNum: orderNum,
+        date: new Date().toLocaleString('fr-FR'),
+        nom: nom,
+        prenom: prenom,
+        telephone: numero,
+        ville: ville,
         codePostal: codePostal,
-        adresse:    adresse,
-        items:      orderItems,
-        total:      orderTotal
+        adresse: adresse,
+        items: orderItems,
+        total: orderTotal
       };
 
-      // Enregistrement Google Sheets + notif Gmail
-      submitOrder(orderData);
+      var submitBtn = form.querySelector('.cart-page__checkout-btn');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = 'Envoi en cours...';
+      }
 
-      try { sessionStorage.setItem('flambeau_last_order', JSON.stringify({ items: orderItems, total: orderTotal })); } catch(e){}
-      clearCart(); renderCartDrawer();
-      window.location.href = 'confirmation.html?order=' + orderNum;
+      // Enregistrement Google Sheets + notif Gmail
+      submitOrder(orderData).then(function(result) {
+        if (result && result.orderNum) {
+          orderNum = result.orderNum;
+        }
+        try { sessionStorage.setItem('flambeau_last_order', JSON.stringify({ items: orderItems, total: orderTotal })); } catch(e){}
+        clearCart(); renderCartDrawer();
+        window.location.href = 'confirmation.html?order=' + orderNum;
+      }).catch(function(error) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Passer la commande';
+        }
+        showToast(error.message || 'Impossible d’envoyer la commande');
+      });
     });
   }
 }
@@ -628,7 +965,7 @@ function initConfirmation() {
       if (itemsEl && order.items) {
         itemsEl.innerHTML = order.items.map(function(item) {
           return '<div class="confirmation-page__order-item">'
-            + '<span>' + item.name + ' × ' + item.qty + '</span>'
+            + '<span>' + escapeHtml(item.name) + (item.fragrance ? ' - Parfum : ' + escapeHtml(item.fragrance) : '') + ' × ' + escapeHtml(item.qty) + '</span>'
             + '<span>' + formatPrice(item.price * item.qty) + '</span>'
             + '</div>';
         }).join('');
@@ -659,10 +996,14 @@ document.addEventListener('DOMContentLoaded', function() {
   initNav();
   initReveal();
 
-  var page = document.body.dataset.page;
-  if (page === 'home') initHome();
-  else if (page === 'shop') initShop();
-  else if (page === 'product') initProduct();
-  else if (page === 'cart') initCart();
-  else if (page === 'confirmation') initConfirmation();
+  loadProductsFromBackend(function() {
+    var page = document.body.dataset.page;
+
+    if (page === 'home') initHome();
+    else if (page === 'shop') initShop();
+    else if (page === 'product') initProduct();
+    else if (page === 'cart') initCart();
+    else if (page === 'confirmation') initConfirmation();
+  });
 });
+

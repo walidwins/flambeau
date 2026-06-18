@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -15,14 +15,11 @@
   <link rel="stylesheet" href="css/styles.css">
 
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>F</text></svg>">
 </head>
 <body data-page="shop">
-  <!-- Skip to content link -->
-  <a href="#main" class="skip-link">Aller au contenu principal</a>
-
   <!-- Navigation -->
-  <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
+    <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
     <div class="nav__inner">
       <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
         <span></span>
@@ -35,8 +32,7 @@
       <ul class="nav__menu">
         <li><a href="index.html" class="nav__link">Accueil</a></li>
         <li><a href="shop.html" class="nav__link nav__link--active">Boutique</a></li>
-        <li><a href="shop.html#bougies" class="nav__link">Bougies</a></li>
-        <li><a href="shop.html#bakhour" class="nav__link">Bakhour</a></li>
+        <li><a href="contact.html" class="nav__link">Contact</a></li>
       </ul>
 
       <div class="nav__actions">
@@ -67,10 +63,11 @@
     <section class="shop-filters" aria-label="Filtres de produits">
       <div class="container">
         <button class="filter-btn filter-btn--active" data-category="all">Tous</button>
-        <button class="filter-btn" data-category="bougies">Bougies</button>
         <button class="filter-btn" data-category="fondants">Fondants</button>
+        <button class="filter-btn" data-category="bougies">Bougies</button>
         <button class="filter-btn" data-category="bakhour">Bakhour</button>
-        <button class="filter-btn" data-category="accessoires">Accessoires</button>
+        <button class="filter-btn" data-category="diffuseurs">Diffuseurs</button>
+        <button class="filter-btn" data-category="poudre-parfumee">Poudre parfumée</button>
       </div>
     </section>
 
@@ -119,13 +116,14 @@
         </div>
 
         <div class="footer__column">
-          <h3 class="footer__title">Boutique</h3>
-          <nav class="footer__links" aria-label="Liens boutique">
+                    <h3 class="footer__title">Boutique</h3>
+          <nav class="footer__links">
             <a href="shop.html" class="footer__link">Toutes nos créations</a>
-            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
             <a href="shop.html#fondants" class="footer__link">Fondants</a>
+            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
             <a href="shop.html#bakhour" class="footer__link">Bakhour</a>
-            <a href="shop.html#accessoires" class="footer__link">Accessoires</a>
+            <a href="shop.html#diffuseurs" class="footer__link">Diffuseurs</a>
+            <a href="shop.html#poudre-parfumee" class="footer__link">Poudre parfumée</a>
           </nav>
         </div>
 
@@ -135,7 +133,7 @@
             <a href="#" class="footer__link">Livraison</a>
             <a href="#" class="footer__link">Retours</a>
             <a href="#" class="footer__link">FAQ</a>
-            <a href="#" class="footer__link">Contact</a>
+            <a href="contact.html" class="footer__link">Contact</a>
           </nav>
         </div>
 
@@ -190,7 +188,7 @@
     <footer class="cart-drawer__footer">
       <div class="cart-drawer__subtotal">
         <span class="cart-drawer__subtotal-label">Sous-total</span>
-        <span class="cart-drawer__subtotal-value">0,00 €</span>
+        <span class="cart-drawer__subtotal-value">0,00 DH</span>
       </div>
       <button class="cart-drawer__checkout" onclick="window.location.href='cart.html'">Voir le panier & Commander</button>
     </footer>
@@ -203,3 +201,6 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+
+
+

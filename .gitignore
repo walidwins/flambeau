@@ -1,0 +1,5 @@
+.env
+data/orders.json
+*.log
+logs/
+node_modules/

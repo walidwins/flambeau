@@ -1,0 +1,272 @@
+﻿<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="robots" content="noindex,nofollow" />
+
+  <title>Admin — Flambeau</title>
+  <link rel="stylesheet" href="css/styles.css" />
+
+  <style>
+    .admin-page {
+      min-height: 100vh;
+      padding: 120px 20px 60px;
+      background: var(--color-cream);
+    }
+
+    .admin-container {
+      max-width: 860px;
+      margin: 0 auto;
+      background: var(--color-white);
+      padding: 36px;
+      border: 1px solid var(--color-sand);
+      border-radius: 8px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .admin-title {
+      font-family: var(--font-display);
+      font-size: 34px;
+      margin-bottom: 28px;
+      color: var(--color-charcoal);
+    }
+
+    .admin-form {
+      display: grid;
+      gap: 16px;
+    }
+
+    .admin-form input,
+    .admin-form textarea,
+    .admin-form select {
+      width: 100%;
+      padding: 14px 16px;
+      border: 1px solid var(--color-sand);
+      border-radius: 4px;
+      font-size: 15px;
+      font-family: var(--font-body);
+      background: var(--color-white);
+      color: var(--color-charcoal);
+    }
+
+    .admin-form input:focus,
+    .admin-form textarea:focus,
+    .admin-form select:focus {
+      outline: none;
+      border-color: var(--color-champagne);
+      box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.12);
+    }
+
+    .admin-form textarea {
+      min-height: 120px;
+      resize: vertical;
+    }
+
+    .admin-btn {
+      background: var(--color-charcoal);
+      color: var(--color-white);
+      border: none;
+      padding: 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      transition: background-color var(--transition-fast), color var(--transition-fast), transform var(--transition-fast);
+    }
+
+    .admin-btn:hover {
+      background: var(--color-champagne);
+      color: var(--color-charcoal);
+      transform: translateY(-1px);
+    }
+
+    .admin-message {
+      margin-top: 20px;
+      font-weight: 600;
+      min-height: 24px;
+    }
+
+    @media (max-width: 640px) {
+      .admin-container {
+        padding: 24px;
+      }
+
+      .admin-title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+
+<body data-page="admin">
+  <nav class="nav nav--solid" role="navigation" aria-label="Navigation principale">
+    <div class="nav__inner">
+      <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+
+      <a href="index.html" class="nav__logo" aria-label="Flambeau - Accueil">FLAMBEAU</a>
+
+      <ul class="nav__menu">
+        <li><a href="index.html" class="nav__link">Accueil</a></li>
+        <li><a href="shop.html" class="nav__link">Boutique</a></li>
+        <li><a href="contact.html" class="nav__link">Contact</a></li>
+      </ul>
+
+      <div class="nav__actions"></div>
+    </div>
+  </nav>
+
+  <main class="admin-page">
+    <div class="admin-container">
+      <h1 class="admin-title">Ajouter un produit</h1>
+
+      <form id="adminProductForm" class="admin-form">
+        <input type="password" id="password" placeholder="Mot de passe admin" required />
+
+        <input type="text" id="name" placeholder="Nom du parfum" required />
+
+        <select id="category">
+          <option value="fondants">Fondants</option>
+          <option value="bougies">Bougies</option>
+          <option value="bakhour">Bakhour</option>
+          <option value="diffuseurs">Diffuseurs</option>
+          <option value="poudre-parfumee">Poudre parfumée</option>
+        </select>
+
+        <input type="number" id="price" placeholder="Prix" required />
+
+        <textarea id="description" placeholder="Description du produit" required></textarea>
+
+        <input type="text" id="notes" placeholder="Notes : Oud, Musc, Ambre" />
+
+        <input type="text" id="fragrances" placeholder="Fragrances : Oud, Musc, Ambre, Vanille" />
+
+        <input type="text" id="weight" placeholder="Volume / poids : 100ml" />
+
+        <input type="number" id="stock" placeholder="Stock" required />
+
+        <input type="text" id="image" list="localImages" placeholder="Lien image ou chemin imgs/..." required />
+        <datalist id="localImages">
+          <option value="imgs/aery-good-vibes-premium-scented-candle-packaging.jpg">
+          <option value="imgs/premium-scented-candle-branding-mockup.jpg">
+          <option value="imgs/luxury-scented-candle-lifestyle-photography.jpg">
+          <option value="imgs/luxury_scented_candle_warm_lighting_lifestyle.jpg">
+          <option value="imgs/premium-scented-candle-luxury-packaging-branding.jpg">
+          <option value="imgs/luxury-scented-candles-and-diffusers-lifestyle.jpg">
+          <option value="imgs/elegant-gold-geometric-bakhour-burner-home-decor.jpg">
+          <option value="imgs/elegant-golden-butterfly-bakhour-burner-set.jpg">
+          <option value="imgs/elegant-gold-bakhour-incense-burner-home-decor.jpg">
+          <option value="imgs/white-onyx-marble-candle-holders-luxury-decor.jpg">
+          <option value="imgs/white-marble-spherical-candle-holders-luxury-decor.jpg">
+          <option value="imgs/premium-scented-candle-milk-carton-packaging.jpg">
+          <option value="imgs/luxury-spa-scented-candle-diffuser-lifestyle.jpg">
+          <option value="imgs/luxury-scented-candle-warmer-warm-lighting.jpg">
+          <option value="imgs/luxury-scented-candle-lifestyle-product-photography.jpg">
+          <option value="imgs/luxury-marble-gold-candle-holders.jpg">
+          <option value="imgs/luxury-marble-candelabra-home-decor.jpg">
+          <option value="imgs/luxury-gold-metal-incense-burner-bakhour.jpg">
+          <option value="imgs/luxury-gold-metal-bakhoor-incense-burner.jpg">
+          <option value="imgs/luxury-foton-pearled-candle-lifestyle-photography.jpg">
+          <option value="imgs/luxury-candle-warmer-warm-ambient-lighting.jpg">
+          <option value="imgs/luxury-candle-warmer-lamp-warm-ambient-lighting.jpg">
+          <option value="imgs/gold-luxury-incense-burner-bakhour.jpg">
+          <option value="imgs/elegant-bakhour-burner-islamic-home-decor.jpg">
+        </datalist>
+
+        <button type="submit" class="admin-btn">Ajouter le produit</button>
+      </form>
+
+      <p id="adminMessage" class="admin-message"></p>
+    </div>
+  </main>
+
+  <script src="js/app.js"></script>
+  <script>
+    var csrfToken = null;
+
+    function loginAdmin(password) {
+      return fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password: password })
+      }).then(function(response) {
+        return response.json().then(function(data) {
+          if (!response.ok) throw new Error(data.error || 'Connexion admin refusee');
+          csrfToken = data.csrfToken;
+          return data;
+        });
+      });
+    }
+
+    function createProduct(product) {
+      return fetch('/api/admin/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfToken
+        },
+        body: JSON.stringify(product)
+      }).then(function(response) {
+        return response.json().then(function(data) {
+          if (!response.ok) throw new Error(data.error || 'Produit refuse par le serveur');
+          return data;
+        });
+      });
+    }
+
+    document.getElementById('adminProductForm').addEventListener('submit', function(e) {
+      e.preventDefault();
+
+      var category = document.getElementById('category').value;
+
+      var labels = {
+        fondants: 'Fondants',
+        bougies: 'Bougies',
+        bakhour: 'Bakhour',
+        diffuseurs: 'Diffuseurs',
+        'poudre-parfumee': 'Poudre parfumée'
+      };
+
+      var product = {
+        name: document.getElementById('name').value,
+        category: category,
+        categoryLabel: labels[category] || 'Bougies',
+        price: document.getElementById('price').value,
+        description: document.getElementById('description').value,
+        notes: document.getElementById('notes').value,
+        fragrances: document.getElementById('fragrances').value,
+        weight: document.getElementById('weight').value,
+        stock: document.getElementById('stock').value,
+        image: document.getElementById('image').value,
+        inStock: true
+      };
+
+      var message = document.getElementById('adminMessage');
+      message.textContent = 'Ajout en cours...';
+      message.style.color = '#2c2c2c';
+
+      loginAdmin(document.getElementById('password').value)
+      .then(function() {
+        return createProduct(product);
+      })
+      .then(function() {
+        message.textContent = 'Produit ajouté avec succès.';
+        message.style.color = 'green';
+        document.getElementById('adminProductForm').reset();
+      })
+      .catch(function(error) {
+        message.textContent = error.message || 'Erreur lors de l’ajout du produit.';
+        message.style.color = 'red';
+      });
+    });
+  </script>
+</body>
+</html>
+
+

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
@@ -15,14 +15,11 @@
   <link rel="stylesheet" href="css/styles.css">
 
   <!-- Favicon -->
-  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🕯</text></svg>">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>F</text></svg>">
 </head>
 <body data-page="home">
-  <!-- Skip to content link -->
-  <a href="#main" class="skip-link">Aller au contenu principal</a>
-
   <!-- Navigation -->
-  <nav class="nav nav--transparent" role="navigation" aria-label="Navigation principale">
+    <nav class="nav nav--transparent" role="navigation" aria-label="Navigation principale">
     <div class="nav__inner">
       <button class="nav__menu-toggle" aria-label="Menu" aria-expanded="false">
         <span></span>
@@ -35,8 +32,7 @@
       <ul class="nav__menu">
         <li><a href="index.html" class="nav__link nav__link--active">Accueil</a></li>
         <li><a href="shop.html" class="nav__link">Boutique</a></li>
-        <li><a href="shop.html#bougies" class="nav__link">Bougies</a></li>
-        <li><a href="shop.html#bakhour" class="nav__link">Bakhour</a></li>
+        <li><a href="contact.html" class="nav__link">Contact</a></li>
       </ul>
 
       <div class="nav__actions">
@@ -63,9 +59,21 @@
     </div>
 
     <div class="hero__content">
+      <p class="hero__eyebrow">Maison de fragrance</p>
       <h1 class="hero__title">Flambeau</h1>
-      <p class="hero__tagline">L'art de la fragrance luxueuse</p>
-      <a href="shop.html" class="hero__cta">Découvrir la collection</a>
+      <p class="hero__tagline">Bougies, fondants et bakhour d'inspiration parfumeur</p>
+      <p class="hero__copy">
+        Des compositions chaleureuses, profondes et raffinées pour transformer chaque pièce en rituel sensoriel.
+      </p>
+      <div class="hero__actions">
+        <a href="shop.html" class="hero__cta">Découvrir la collection</a>
+        <a href="#collections" class="hero__link">Voir les univers</a>
+      </div>
+      <div class="hero__notes" aria-label="Notes olfactives signatures">
+        <span>Ambre doux</span>
+        <span>Bois précieux</span>
+        <span>Fleur blanche</span>
+      </div>
     </div>
 
     <div class="hero__scroll" aria-hidden="true">
@@ -77,8 +85,28 @@
   </section>
 
   <main id="main">
+    <section class="scent-bar home-overview" aria-label="Promesses Flambeau">
+      <div class="container scent-bar__grid">
+        <div class="scent-bar__item reveal">
+          <span class="scent-bar__number">01</span>
+          <h2 class="scent-bar__title">Accords parfumés</h2>
+          <p>Fragrances travaillées comme des accords de parfum.</p>
+        </div>
+        <div class="scent-bar__item reveal reveal-delay-1">
+          <span class="scent-bar__number">02</span>
+          <h2 class="scent-bar__title">Matières nobles</h2>
+          <p>Matières sélectionnées pour une diffusion élégante.</p>
+        </div>
+        <div class="scent-bar__item reveal reveal-delay-2">
+          <span class="scent-bar__number">03</span>
+          <h2 class="scent-bar__title">Objets d'intérieur</h2>
+          <p>Objets décoratifs pensés pour les intérieurs raffinés.</p>
+        </div>
+      </div>
+    </section>
+
     <!-- Brand Story -->
-    <section class="section brand-story" aria-label="Notre histoire">
+    <section class="section brand-story home-section" aria-label="Notre histoire">
       <div class="container">
         <div class="brand-story__grid">
           <div class="brand-story__image reveal">
@@ -92,7 +120,7 @@
               au voyage, un moment suspendu où le temps ralentit et où les sens s'éveillent.
             </p>
             <p class="brand-story__text">
-              Nos bougies, fondants et bakhour sont conçus avec des ingrédients nobles, sélectionés avec soin
+              Nos bougies, fondants et bakhour sont conçus avec des ingrédients nobles, sélectionnés avec soin
               auprès des meilleurs producteurs internationaux pour vous offrir des expériences sensorielles uniques.
             </p>
             <a href="shop.html" class="btn btn--secondary">Explorer la boutique</a>
@@ -102,32 +130,62 @@
     </section>
 
     <!-- Categories -->
-    <section class="section" aria-label="Catégories de produits">
+    <section class="section collection-section home-section" id="collections" aria-label="Catégories de produits">
       <div class="container">
         <header class="section-header reveal">
           <p class="text-label section-header__label">Nos univers</p>
           <h2 class="section-header__title">Découvrez nos collections</h2>
+          <p class="section-header__subtitle">Choisissez votre rituel: une flamme, une cire fondante, un bakhour ou une diffusion douce.</p>
         </header>
 
         <div class="categories">
-          <a href="shop.html#bougies" class="category-card reveal reveal-delay-1">
-            <img src="imgs/aery-good-vibes-premium-scented-candle-packaging.jpg" alt="Bougies parfumées" class="category-card__image" loading="lazy">
+          <a href="shop.html#fondants" class="category-card reveal reveal-delay-1">
+            <img src="imgs/luxury-scented-candles-and-diffusers-lifestyle.jpg" alt="Fondants parfumés" class="category-card__image" loading="lazy">
             <div class="category-card__overlay">
-              <h3 class="category-card__title">Bougies</h3>
+              <div>
+                <p class="category-card__label">Cire parfumée</p>
+                <h3 class="category-card__title">Fondants</h3>
+              </div>
             </div>
           </a>
 
-          <a href="shop.html#fondants" class="category-card reveal reveal-delay-2">
-            <img src="imgs/luxury-scented-candles-and-diffusers-lifestyle.jpg" alt="Fondants parfumés" class="category-card__image" loading="lazy">
+          <a href="shop.html#bougies" class="category-card reveal reveal-delay-2">
+            <img src="imgs/aery-good-vibes-premium-scented-candle-packaging.jpg" alt="Bougies parfumées" class="category-card__image" loading="lazy">
             <div class="category-card__overlay">
-              <h3 class="category-card__title">Fondants</h3>
+              <div>
+                <p class="category-card__label">Flamme signature</p>
+                <h3 class="category-card__title">Bougies</h3>
+              </div>
             </div>
           </a>
 
           <a href="shop.html#bakhour" class="category-card reveal reveal-delay-3">
             <img src="imgs/elegant-gold-geometric-bakhour-burner-home-decor.jpg" alt="Bakhour" class="category-card__image" loading="lazy">
             <div class="category-card__overlay">
-              <h3 class="category-card__title">Bakhour</h3>
+              <div>
+                <p class="category-card__label">Rituel oriental</p>
+                <h3 class="category-card__title">Bakhour</h3>
+              </div>
+            </div>
+          </a>
+
+          <a href="shop.html#diffuseurs" class="category-card reveal reveal-delay-1">
+            <img src="imgs/luxury-spa-scented-candle-diffuser-lifestyle.jpg" alt="Diffuseurs" class="category-card__image" loading="lazy">
+            <div class="category-card__overlay">
+              <div>
+                <p class="category-card__label">Parfum d'ambiance</p>
+                <h3 class="category-card__title">Diffuseurs</h3>
+              </div>
+            </div>
+          </a>
+
+          <a href="shop.html#poudre-parfumee" class="category-card reveal reveal-delay-2">
+            <img src="imgs/white-onyx-marble-candle-holders-luxury-decor.jpg" alt="Poudre parfumée" class="category-card__image" loading="lazy">
+            <div class="category-card__overlay">
+              <div>
+                <p class="category-card__label">Touche textile</p>
+                <h3 class="category-card__title">Poudre parfumée</h3>
+              </div>
             </div>
           </a>
         </div>
@@ -135,7 +193,7 @@
     </section>
 
     <!-- Featured Products -->
-    <section class="section featured-products" aria-label="Produits vedettes">
+    <section class="section featured-products home-section" aria-label="Produits vedettes">
       <div class="container">
         <header class="section-header reveal">
           <p class="text-label section-header__label">Sélection</p>
@@ -154,7 +212,7 @@
     </section>
 
     <!-- Testimonials -->
-    <section class="section testimonials" aria-label="Témoignages clients">
+    <section class="section testimonials home-section" aria-label="Témoignages clients">
       <div class="container">
         <header class="section-header reveal">
           <p class="text-label section-header__label">Avis</p>
@@ -174,7 +232,7 @@
     </section>
 
     <!-- Newsletter -->
-    <section class="section newsletter" aria-label="Newsletter">
+    <section class="section newsletter-section home-section" aria-label="Newsletter">
       <div class="container">
         <div class="newsletter reveal">
           <h2 class="newsletter__title">Rejoignez le cercle Flambeau</h2>
@@ -227,13 +285,14 @@
         </div>
 
         <div class="footer__column">
-          <h3 class="footer__title">Boutique</h3>
-          <nav class="footer__links" aria-label="Liens boutique">
+                    <h3 class="footer__title">Boutique</h3>
+          <nav class="footer__links">
             <a href="shop.html" class="footer__link">Toutes nos créations</a>
-            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
             <a href="shop.html#fondants" class="footer__link">Fondants</a>
+            <a href="shop.html#bougies" class="footer__link">Bougies parfumées</a>
             <a href="shop.html#bakhour" class="footer__link">Bakhour</a>
-            <a href="shop.html#accessoires" class="footer__link">Accessoires</a>
+            <a href="shop.html#diffuseurs" class="footer__link">Diffuseurs</a>
+            <a href="shop.html#poudre-parfumee" class="footer__link">Poudre parfumée</a>
           </nav>
         </div>
 
@@ -243,7 +302,7 @@
             <a href="#" class="footer__link">Livraison</a>
             <a href="#" class="footer__link">Retours</a>
             <a href="#" class="footer__link">FAQ</a>
-            <a href="#" class="footer__link">Contact</a>
+            <a href="contact.html" class="footer__link">Contact</a>
           </nav>
         </div>
 
@@ -298,7 +357,7 @@
     <footer class="cart-drawer__footer">
       <div class="cart-drawer__subtotal">
         <span class="cart-drawer__subtotal-label">Sous-total</span>
-        <span class="cart-drawer__subtotal-value">0,00 €</span>
+        <span class="cart-drawer__subtotal-value">0,00 DH</span>
       </div>
       <button class="cart-drawer__checkout" onclick="window.location.href='cart.html'">Voir le panier & Commander</button>
     </footer>
@@ -311,3 +370,4 @@
   <script src="js/app.js"></script>
 </body>
 </html>
+

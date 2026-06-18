@@ -1,0 +1,258 @@
+[
+  {
+    "id": "B001",
+    "name": "Fleur d'Oranger",
+    "category": "bougies",
+    "categoryLabel": "Bougies",
+    "price": 35,
+    "description": "Une bougie majestueuse qui capture l'essence florale de la fleur d'oranger.",
+    "notes": [
+      "Fleur d'oranger",
+      "Jasmin",
+      "Bois de santal"
+    ],
+    "weight": "300g",
+    "stock": 20,
+    "image": "imgs/aery-good-vibes-premium-scented-candle-packaging.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "B002",
+    "name": "Vanille Bourbon",
+    "category": "bougies",
+    "categoryLabel": "Bougies",
+    "price": 32,
+    "description": "Une odeur chaleureuse de vanille Bourbon, feve tonka et caramel.",
+    "notes": [
+      "Vanille",
+      "Feve tonka",
+      "Caramel"
+    ],
+    "weight": "300g",
+    "stock": 10,
+    "image": "imgs/premium-scented-candle-branding-mockup.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "B003",
+    "name": "Rose Damascena",
+    "category": "bougies",
+    "categoryLabel": "Bougies",
+    "price": 38,
+    "description": "Une rose complexe avec patchouli et musc blanc.",
+    "notes": [
+      "Rose",
+      "Patchouli",
+      "Musc blanc"
+    ],
+    "weight": "300g",
+    "stock": 15,
+    "image": "imgs/luxury-scented-candle-lifestyle-photography.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "B004",
+    "name": "Nuit Ambree",
+    "category": "bougies",
+    "categoryLabel": "Bougies",
+    "price": 40,
+    "description": "Un accord chaud d'ambre, bois precieux et musc blanc.",
+    "notes": [
+      "Ambre",
+      "Bois de cedre",
+      "Musc"
+    ],
+    "weight": "300g",
+    "stock": 5,
+    "image": "imgs/luxury_scented_candle_warm_lighting_lifestyle.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "F001",
+    "name": "Cafe Gourmet",
+    "category": "fondants",
+    "categoryLabel": "Fondants",
+    "price": 18,
+    "description": "Un coffret de 12 fondants aux notes cafe, creme et chocolat.",
+    "notes": [
+      "Cafe",
+      "Creme",
+      "Chocolat"
+    ],
+    "weight": "Pack 12",
+    "stock": 20,
+    "image": "imgs/premium-scented-candle-luxury-packaging-branding.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "F002",
+    "name": "Lavande Provencale",
+    "category": "fondants",
+    "categoryLabel": "Fondants",
+    "price": 16,
+    "description": "Des fondants apaisants a la lavande, camomille et miel.",
+    "notes": [
+      "Lavande",
+      "Camomille",
+      "Miel"
+    ],
+    "weight": "Pack 12",
+    "stock": 25,
+    "image": "imgs/luxury-scented-candles-and-diffusers-lifestyle.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "K001",
+    "name": "Oud Royal",
+    "category": "bakhour",
+    "categoryLabel": "Bakhour",
+    "price": 45,
+    "description": "Un bakhour d'exception aux notes profondes d'oud, ambre et musc.",
+    "notes": [
+      "Oud",
+      "Ambre",
+      "Musc"
+    ],
+    "weight": "50g",
+    "stock": 10,
+    "image": "imgs/elegant-gold-geometric-bakhour-burner-home-decor.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "K002",
+    "name": "Mysore Santal",
+    "category": "bakhour",
+    "categoryLabel": "Bakhour",
+    "price": 42,
+    "description": "Un bois de santal precieux associe au bois de rose et a la vanille.",
+    "notes": [
+      "Santal",
+      "Bois de rose",
+      "Vanille"
+    ],
+    "weight": "50g",
+    "stock": 15,
+    "image": "imgs/elegant-golden-butterfly-bakhour-burner-set.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "D001",
+    "name": "Diffuseur Elegant",
+    "category": "diffuseurs",
+    "categoryLabel": "Diffuseurs",
+    "price": 28,
+    "description": "Un diffuseur raffine pour diffuser votre parfum prefere avec elegance.",
+    "notes": [
+      "Parfum au choix"
+    ],
+    "weight": "Unique",
+    "stock": 10,
+    "image": "imgs/elegant-gold-bakhour-incense-burner-home-decor.jpg",
+    "inStock": true
+  },
+  {
+    "id": "PP001",
+    "name": "Poudre Parfumee",
+    "category": "poudre-parfumee",
+    "categoryLabel": "Poudre parfumee",
+    "price": 35,
+    "description": "Une poudre parfumee delicate a personnaliser avec la fragrance de votre choix.",
+    "notes": [
+      "Parfum au choix"
+    ],
+    "weight": "100g",
+    "stock": 15,
+    "image": "imgs/white-onyx-marble-candle-holders-luxury-decor.jpg",
+    "inStock": true,
+    "fragrances": [
+      "Oud",
+      "Musc",
+      "Ambre",
+      "Vanille",
+      "Fleur d'oranger",
+      "Rose"
+    ]
+  },
+  {
+    "id": "P1781761097633",
+    "name": "fruit",
+    "category": "poudre-parfumee",
+    "categoryLabel": "Poudre parfumée",
+    "price": 800,
+    "description": "bien top vrais",
+    "notes": [
+      "oud"
+    ],
+    "fragrances": [
+      "musc"
+    ],
+    "weight": "100",
+    "stock": 86,
+    "image": "imgs/premium-scented-candle-branding-mockup.jpg",
+    "inStock": true
+  }
+]

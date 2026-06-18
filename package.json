@@ -1,0 +1,15 @@
+{
+  "name": "flambeau-shop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Flambeau ecommerce with a real Node.js backend",
+  "scripts": {
+    "start": "node server/index.js",
+    "dev": "node server/index.js",
+    "check": "node --check server/index.js && node --check public/js/app.js && node --check public/js/contact.js",
+    "check:prod": "node --check server/index.js && node --check public/js/app.js && node --check public/js/contact.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

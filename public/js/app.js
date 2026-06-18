@@ -888,12 +888,22 @@ function submitOrder(orderData) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(orderData)
   }).then(function(response) {
-    if (!response.ok) {
-      return response.json().then(function(data) {
-        throw new Error(data.error || 'Commande refusée par le serveur');
-      });
-    }
-    return response.json();
+    return response.text().then(function(text) {
+      if (!response.ok) {
+        var message = 'Commande refusée par le serveur';
+        try {
+          var data = JSON.parse(text || '{}');
+          if (data && data.error) message = data.error;
+        } catch (e) {}
+        throw new Error(message);
+      }
+
+      try {
+        return JSON.parse(text || '{}');
+      } catch (e) {
+        return {};
+      }
+    });
   });
 }
 

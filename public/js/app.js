@@ -866,21 +866,34 @@ function renderCartPage() {
 }
 
 function submitOrder(orderData) {
-  if (typeof GOOGLE_SCRIPT_URL === 'undefined' || !GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
-    console.warn('URL Google Apps Script manquante');
-    return Promise.reject(new Error('URL Google Apps Script manquante'));
+  var scriptUrl = typeof GOOGLE_SCRIPT_URL !== 'undefined' ? GOOGLE_SCRIPT_URL : '';
+
+  if (scriptUrl && scriptUrl !== 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
+    return fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    }).then(function() {
+      console.log('Commande envoyée vers Google Apps Script');
+    }).catch(function(err) {
+      console.warn('Erreur envoi commande:', err);
+      throw err;
+    });
   }
 
-  return fetch(GOOGLE_SCRIPT_URL, {
+  console.warn('URL Google Apps Script manquante, utilisation du backend local /api/orders');
+  return fetch('/api/orders', {
     method: 'POST',
-    mode: 'no-cors',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify(orderData)
-  }).then(function() {
-    console.log('Commande envoyée vers Google Apps Script');
-  }).catch(function(err) {
-    console.warn('Erreur envoi commande:', err);
-    throw err;
+  }).then(function(response) {
+    if (!response.ok) {
+      return response.json().then(function(data) {
+        throw new Error(data.error || 'Commande refusée par le serveur');
+      });
+    }
+    return response.json();
   });
 }
 

@@ -872,7 +872,7 @@ function submitOrder(orderData) {
     return fetch(scriptUrl, {
       method: 'POST',
       mode: 'no-cors',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
       body: JSON.stringify(orderData)
     }).then(function() {
       console.log('Commande envoyée vers Google Apps Script');
@@ -890,10 +890,11 @@ function submitOrder(orderData) {
   }).then(function(response) {
     return response.text().then(function(text) {
       if (!response.ok) {
-        var message = 'Commande refusée par le serveur';
+        var message = text || 'Commande refusée par le serveur';
         try {
           var data = JSON.parse(text || '{}');
           if (data && data.error) message = data.error;
+          else if (data && data.details) message = data.details;
         } catch (e) {}
         throw new Error(message);
       }
@@ -904,6 +905,8 @@ function submitOrder(orderData) {
         return {};
       }
     });
+  }).catch(function(err) {
+    throw new Error(err.message || 'Impossible d’envoyer la commande');
   });
 }
 

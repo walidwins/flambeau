@@ -865,22 +865,29 @@ function renderCartPage() {
   if (totEl) totEl.textContent = formatPrice(total);
 }
 
-function submitOrder(orderData) {
-  var scriptUrl = typeof GOOGLE_SCRIPT_URL !== 'undefined' ? GOOGLE_SCRIPT_URL : '';
+var GOOGLE_APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbx2fp0mYNbZWypaH1awQufsuM3m1Axs5uq3nvhj7-Mohbd9O4nYsQ8DijvrnoN7Sas1/exec";
 
-  if (scriptUrl && scriptUrl !== 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
-    return fetch(scriptUrl, {
-      method: 'POST',
-      mode: 'no-cors',
-      headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-      body: JSON.stringify(orderData)
-    }).then(function() {
-      console.log('Commande envoyée vers Google Apps Script');
-    }).catch(function(err) {
-      console.warn('Erreur envoi commande:', err);
-      throw err;
-    });
+function submitOrder(orderData) {
+  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
+    console.warn('URL Google Apps Script manquante');
+    return;
   }
+
+  fetch(GOOGLE_SCRIPT_URL, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {
+      'Content-Type': 'text/plain;charset=utf-8'
+    },
+    body: JSON.stringify(orderData)
+  })
+  .then(function() {
+    console.log('Commande envoyée vers Google Apps Script');
+  })
+  .catch(function(err) {
+    console.warn('Erreur envoi commande:', err);
+  });
+}
 
   console.warn('URL Google Apps Script manquante, utilisation du backend local /api/orders');
   return fetch('/api/orders', {

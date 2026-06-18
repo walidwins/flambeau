@@ -865,29 +865,22 @@ function renderCartPage() {
   if (totEl) totEl.textContent = formatPrice(total);
 }
 
-var GOOGLE_APPS_SCRIPT_URL="https://script.google.com/macros/s/AKfycbx2fp0mYNbZWypaH1awQufsuM3m1Axs5uq3nvhj7-Mohbd9O4nYsQ8DijvrnoN7Sas1/exec";
-
 function submitOrder(orderData) {
-  if (!GOOGLE_SCRIPT_URL || GOOGLE_SCRIPT_URL === 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
-    console.warn('URL Google Apps Script manquante');
-    return;
-  }
+  var scriptUrl = typeof GOOGLE_SCRIPT_URL !== 'undefined' ? GOOGLE_SCRIPT_URL : '';
 
-  fetch(GOOGLE_SCRIPT_URL, {
-    method: 'POST',
-    mode: 'no-cors',
-    headers: {
-      'Content-Type': 'text/plain;charset=utf-8'
-    },
-    body: JSON.stringify(orderData)
-  })
-  .then(function() {
-    console.log('Commande envoyée vers Google Apps Script');
-  })
-  .catch(function(err) {
-    console.warn('Erreur envoi commande:', err);
-  });
-}
+  if (scriptUrl && scriptUrl !== 'VOTRE_URL_GOOGLE_APPS_SCRIPT_ICI') {
+    return fetch(scriptUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(orderData)
+    }).then(function() {
+      console.log('Commande envoyée vers Google Apps Script');
+    }).catch(function(err) {
+      console.warn('Erreur envoi commande:', err);
+      throw err;
+    });
+  }
 
   console.warn('URL Google Apps Script manquante, utilisation du backend local /api/orders');
   return fetch('/api/orders', {
@@ -897,11 +890,10 @@ function submitOrder(orderData) {
   }).then(function(response) {
     return response.text().then(function(text) {
       if (!response.ok) {
-        var message = text || 'Commande refusée par le serveur';
+        var message = 'Commande refusée par le serveur';
         try {
           var data = JSON.parse(text || '{}');
           if (data && data.error) message = data.error;
-          else if (data && data.details) message = data.details;
         } catch (e) {}
         throw new Error(message);
       }
@@ -912,8 +904,6 @@ function submitOrder(orderData) {
         return {};
       }
     });
-  }).catch(function(err) {
-    throw new Error(err.message || 'Impossible d’envoyer la commande');
   });
 }
 

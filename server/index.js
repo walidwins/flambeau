@@ -460,9 +460,8 @@ function getRequestOrigin(req) {
 }
 
 function getServerOrigin(req) {
-  const proto = config.trustProxy && req.headers['x-forwarded-proto']
-    ? String(req.headers['x-forwarded-proto']).split(',')[0].trim()
-    : 'http';
+  const forwardedProto = String(req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const proto = forwardedProto || (config.trustProxy || IS_VERCEL ? 'https' : 'http');
   const host = String(req.headers.host || '').trim();
   return host ? `${proto}://${host}` : '';
 }
@@ -472,6 +471,8 @@ function isAllowedOrigin(req) {
   if (!origin) return true;
   if (origin === 'invalid') return false;
   if (origin === getServerOrigin(req)) return true;
+  const host = String(req.headers.host || '').trim();
+  if (host && origin === `https://${host}`) return true;
   return config.corsAllowedOrigins.includes(origin);
 }
 

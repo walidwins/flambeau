@@ -406,7 +406,7 @@ function initNav() {
       toggle.setAttribute('aria-expanded', open);
       document.body.classList.toggle('nav-open', open);
     });
-
+  }
     menu.querySelectorAll('a').forEach(function(link) {
       link.addEventListener('click', function() {
         menu.classList.remove('nav__menu--open');

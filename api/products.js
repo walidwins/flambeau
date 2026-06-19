@@ -1,8 +1,6 @@
 const PRODUCTS_ACTION = 'products';
 const ADD_PRODUCT_ACTION = 'addProduct';
-const fs = require('fs/promises');
-const path = require('path');
-const LOCAL_PRODUCTS_FILE = path.join(process.cwd(), 'data', 'products.json');
+const UPDATE_PRODUCT_ACTION = 'updateProduct';
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
@@ -31,31 +29,45 @@ async function readJsonResponse(response) {
   }
 }
 
-async function readLocalProducts() {
-  try {
-    const raw = await fs.readFile(LOCAL_PRODUCTS_FILE, 'utf8');
-    const products = JSON.parse(raw.replace(/^\uFEFF/, ''));
-    return Array.isArray(products) ? products : [];
-  } catch (error) {
-    return [];
-  }
+function normalizeProductsPayload(data) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.products)) return data.products;
+  if (data && Array.isArray(data.data)) return data.data;
+  return [];
 }
 
-function mergeProducts(primaryProducts, fallbackProducts) {
+function dedupeProducts(products) {
   const merged = [];
-  const seen = new Set();
+  const seenIds = new Set();
+  const seenKeys = new Set();
+
+  function normalizeKeyPart(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function productKey(product) {
+    const name = normalizeKeyPart(product.name || product.nom || product.Nom || '');
+    const category = normalizeKeyPart(product.category || product.categorie || product.Category || '');
+    return name && category ? `${category}::${name}` : '';
+  }
 
   function addList(products) {
     if (!Array.isArray(products)) return;
     products.forEach((product) => {
-      if (!product || !product.id || seen.has(product.id)) return;
-      seen.add(product.id);
+      const key = productKey(product);
+      if (!product || !product.id || seenIds.has(product.id) || (key && seenKeys.has(key))) return;
+      seenIds.add(product.id);
+      if (key) seenKeys.add(key);
       merged.push(product);
     });
   }
 
-  addList(primaryProducts);
-  addList(fallbackProducts);
+  addList(products);
   return merged;
 }
 
@@ -65,7 +77,7 @@ module.exports = async function handler(req, res) {
   try {
     if (req.method === 'GET') {
       if (!scriptUrl) {
-        return sendJson(res, 200, await readLocalProducts());
+        return sendJson(res, 500, { error: 'GOOGLE_APPS_SCRIPT_URL manquante' });
       }
 
       const separator = scriptUrl.indexOf('?') === -1 ? '?' : '&';
@@ -73,20 +85,29 @@ module.exports = async function handler(req, res) {
       const data = await readJsonResponse(response);
 
       if (!response.ok || data.status === 'error') {
-        return sendJson(res, 200, await readLocalProducts());
+        return sendJson(res, response.ok ? 502 : response.status, {
+          error: 'Erreur Google Apps Script produits',
+          details: data.message || data.error || data.raw || response.statusText
+        });
       }
 
-      return sendJson(res, 200, mergeProducts(data, await readLocalProducts()));
+      return sendJson(res, 200, dedupeProducts(normalizeProductsPayload(data)));
     }
 
-    if (req.method === 'POST') {
+    if (req.method === 'POST' || req.method === 'PUT') {
       if (!scriptUrl) {
         return sendJson(res, 500, { error: 'GOOGLE_APPS_SCRIPT_URL manquante' });
       }
 
+      const body = parseBody(req.body);
+      const isUpdate = req.method === 'PUT'
+        || body.action === UPDATE_PRODUCT_ACTION
+        || body._method === 'PUT'
+        || body.update === true;
+
       const payload = {
-        ...parseBody(req.body),
-        action: ADD_PRODUCT_ACTION
+        ...body,
+        action: isUpdate ? UPDATE_PRODUCT_ACTION : ADD_PRODUCT_ACTION
       };
 
       const response = await fetch(scriptUrl, {
@@ -109,7 +130,7 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 200, data);
     }
 
-    res.setHeader('Allow', 'GET, POST');
+    res.setHeader('Allow', 'GET, POST, PUT');
     return sendJson(res, 405, { error: 'Methode non autorisee' });
   } catch (error) {
     return sendJson(res, 500, {

@@ -8,7 +8,6 @@ const { URL } = require('url');
 const ROOT_DIR = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
-const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const IS_VERCEL = Boolean(process.env.VERCEL);
 const ORDERS_FILE = IS_VERCEL ? path.join(os.tmpdir(), 'flambeau-orders.json') : path.join(DATA_DIR, 'orders.json');
 const ENV_FILE = path.join(ROOT_DIR, '.env');
@@ -556,29 +555,49 @@ async function readProductsFromAppsScript() {
   return { status: 'ready', products: data };
 }
 
-async function readLocalProducts() {
-  return readJson(PRODUCTS_FILE, []);
+function normalizeProductsPayload(data) {
+  if (Array.isArray(data)) return data;
+  if (data && Array.isArray(data.products)) return data.products;
+  if (data && Array.isArray(data.data)) return data.data;
+  return [];
 }
 
-function mergeProducts(primaryProducts, fallbackProducts) {
+function dedupeProducts(products) {
   const merged = [];
-  const seen = new Set();
+  const seenIds = new Set();
+  const seenKeys = new Set();
+
+  function normalizeKeyPart(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function productKey(product) {
+    const name = normalizeKeyPart(product.name || product.nom || product.Nom || '');
+    const category = normalizeKeyPart(product.category || product.categorie || product.Category || '');
+    return name && category ? `${category}::${name}` : '';
+  }
 
   function addList(products) {
     if (!Array.isArray(products)) return;
     products.forEach((product) => {
-      if (!product || !product.id || seen.has(product.id)) return;
-      seen.add(product.id);
+      const key = productKey(product);
+      if (!product || !product.id || seenIds.has(product.id) || (key && seenKeys.has(key))) return;
+      seenIds.add(product.id);
+      if (key) seenKeys.add(key);
       merged.push(product);
     });
   }
 
-  addList(primaryProducts);
-  addList(fallbackProducts);
+  addList(products);
   return merged;
 }
 
-async function sendProductToAppsScript(product) {
+async function sendProductToAppsScript(product, action = 'addProduct') {
   if (!config.googleAppsScriptUrl) {
     return { status: 'skipped', reason: 'GOOGLE_APPS_SCRIPT_URL not configured' };
   }
@@ -588,7 +607,7 @@ async function sendProductToAppsScript(product) {
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
       ...product,
-      action: 'addProduct'
+      action
     })
   });
 
@@ -602,7 +621,7 @@ async function sendProductToAppsScript(product) {
   }
 
   if (!response.ok || data.status === 'error') {
-    throw new Error(data.message || data.error || data.raw || `Apps Script addProduct failed with status ${response.status}`);
+    throw new Error(data.message || data.error || data.raw || `Apps Script ${action} failed with status ${response.status}`);
   }
 
   return { status: 'saved', provider: 'apps-script', response: data };
@@ -666,16 +685,23 @@ async function handleApi(req, res, url) {
     try {
       const integration = await readProductsFromAppsScript();
       if (integration.status === 'skipped') {
-        sendJson(res, 200, await readLocalProducts());
+        sendJson(res, 503, {
+          ok: false,
+          error: 'Google Apps Script products is not configured',
+          details: integration.reason
+        });
         return;
       }
 
-      const products = Array.isArray(integration.products) ? integration.products : [];
-      sendJson(res, 200, mergeProducts(products, await readLocalProducts()));
+      sendJson(res, 200, dedupeProducts(normalizeProductsPayload(integration.products)));
       return;
     } catch (error) {
       console.warn('Products Google integration failed:', error.message);
-      sendJson(res, 200, await readLocalProducts());
+      sendJson(res, 502, {
+        ok: false,
+        error: 'Products Google integration failed',
+        details: error.message
+      });
       return;
     }
   }
@@ -683,10 +709,22 @@ async function handleApi(req, res, url) {
   if (req.method === 'POST' && url.pathname === '/api/products') {
     const body = await parseJsonBody(req);
     const product = validateProduct(body);
+    const isUpdate = body.action === 'updateProduct' || body._method === 'PUT' || body.update === true;
     product.password = cleanText(body.password, 120);
+    if (isUpdate) {
+      product.id = cleanText(body.id, 80);
+    }
+
+    if (isUpdate && !product.id) {
+      sendJson(res, 400, {
+        ok: false,
+        error: 'Product id is required'
+      });
+      return;
+    }
 
     try {
-      const integration = await sendProductToAppsScript(product);
+      const integration = await sendProductToAppsScript(product, isUpdate ? 'updateProduct' : 'addProduct');
       if (integration.status === 'skipped') {
         sendJson(res, 503, {
           ok: false,
@@ -696,7 +734,45 @@ async function handleApi(req, res, url) {
         return;
       }
 
-      sendJson(res, 201, { ok: true, product, integration });
+      sendJson(res, isUpdate ? 200 : 201, { ok: true, product, integration });
+      return;
+    } catch (error) {
+      console.warn('Product Google integration failed:', error.message);
+      sendJson(res, 502, {
+        ok: false,
+        error: 'Product Google Apps Script failed',
+        details: error.message
+      });
+      return;
+    }
+  }
+
+  if (req.method === 'PUT' && url.pathname === '/api/products') {
+    const body = await parseJsonBody(req);
+    const product = validateProduct(body);
+    product.id = cleanText(body.id, 80);
+    product.password = cleanText(body.password, 120);
+
+    if (!product.id) {
+      sendJson(res, 400, {
+        ok: false,
+        error: 'Product id is required'
+      });
+      return;
+    }
+
+    try {
+      const integration = await sendProductToAppsScript(product, 'updateProduct');
+      if (integration.status === 'skipped') {
+        sendJson(res, 503, {
+          ok: false,
+          error: 'Google Apps Script products is not configured',
+          details: integration.reason
+        });
+        return;
+      }
+
+      sendJson(res, 200, { ok: true, product, integration });
       return;
     } catch (error) {
       console.warn('Product Google integration failed:', error.message);
@@ -748,7 +824,7 @@ async function handleApi(req, res, url) {
       console.warn('Product detail Google integration failed:', error.message);
     }
 
-    products = mergeProducts(products, await readLocalProducts());
+    products = dedupeProducts(normalizeProductsPayload(products));
 
     const product = products.find((item) => item.id === id);
     product ? sendJson(res, 200, product) : sendError(res, 404, 'Product not found');

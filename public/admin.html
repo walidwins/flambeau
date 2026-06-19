@@ -37,6 +37,40 @@
       gap: 16px;
     }
 
+    .admin-toolbar {
+      display: grid;
+      gap: 12px;
+      margin-bottom: 24px;
+      padding: 18px;
+      border: 1px solid var(--color-sand);
+      border-radius: 6px;
+      background: var(--color-cream);
+    }
+
+    .admin-toolbar__actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .admin-small-btn {
+      border: 1px solid var(--color-charcoal);
+      background: transparent;
+      color: var(--color-charcoal);
+      padding: 11px 14px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .admin-small-btn:hover {
+      background: var(--color-charcoal);
+      color: var(--color-white);
+    }
+
     .admin-form input,
     .admin-form textarea,
     .admin-form select {
@@ -61,6 +95,21 @@
     .admin-form textarea {
       min-height: 120px;
       resize: vertical;
+    }
+
+    .admin-check {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 0;
+      color: var(--color-charcoal);
+      font-weight: 600;
+    }
+
+    .admin-check input {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--color-champagne);
     }
 
     .admin-btn {
@@ -126,10 +175,21 @@
     <div class="admin-container">
       <h1 class="admin-title">Ajouter un produit</h1>
 
+      <div class="admin-toolbar">
+        <select id="productPicker" aria-label="Choisir un produit à modifier">
+          <option value="">Charger un produit existant...</option>
+        </select>
+        <div class="admin-toolbar__actions">
+          <button type="button" id="newProductBtn" class="admin-small-btn">Nouveau produit</button>
+        </div>
+      </div>
+
       <form id="adminProductForm" class="admin-form">
+        <input type="hidden" id="productId" />
+
         <input type="password" id="password" placeholder="Mot de passe admin" required />
 
-        <input type="text" id="name" placeholder="Nom du parfum" required />
+        <input type="text" id="name" placeholder="Nom du produit" required />
 
         <select id="category">
           <option value="fondants">Fondants</option>
@@ -145,11 +205,16 @@
 
         <input type="text" id="notes" placeholder="Notes : Oud, Musc, Ambre" />
 
-        <input type="text" id="fragrances" placeholder="Fragrances : Oud, Musc, Ambre, Vanille" />
+        <textarea id="fragrances" placeholder="Fragrances disponibles"></textarea>
 
         <input type="text" id="weight" placeholder="Volume / poids : 100ml" />
 
         <input type="number" id="stock" placeholder="Stock" required />
+
+        <label class="admin-check">
+          <input type="checkbox" id="inStock" checked />
+          Produit disponible / en stock
+        </label>
 
         <input type="text" id="image" list="localImages" placeholder="Lien image ou chemin imgs/..." required />
         <datalist id="localImages">
@@ -179,7 +244,7 @@
           <option value="imgs/elegant-bakhour-burner-islamic-home-decor.jpg">
         </datalist>
 
-        <button type="submit" class="admin-btn">Ajouter le produit</button>
+        <button type="submit" class="admin-btn" id="saveProductBtn">Ajouter le produit</button>
       </form>
 
       <p id="adminMessage" class="admin-message"></p>
@@ -188,7 +253,154 @@
 
   <script src="js/app.js"></script>
   <script>
-    function createProduct(product) {
+    var DEFAULT_ADMIN_FRAGRANCES = [
+      'Oud',
+      'Musc',
+      'Ambre',
+      'Vanille',
+      "Fleur d'oranger",
+      'Rose',
+      'Gardenia',
+      'Herbal',
+      'Magnolia précieuse',
+      'Fruits rouges',
+      'Lavande',
+      'Thé vert',
+      'Jasmin de damas',
+      'Chocolat noir',
+      'Cannelle orange',
+      'Citron',
+      'Caramel',
+      'Bois de oud',
+      'Orchidée',
+      'Khalij',
+      'Ylang ylang',
+      'Cerise'
+    ];
+    var ADMIN_FRAGRANCE_CATEGORIES = ['fondants', 'bougies', 'bakhour', 'poudre-parfumee'];
+
+    function categoryNeedsFragrances(category) {
+      return ADMIN_FRAGRANCE_CATEGORIES.indexOf(category) !== -1;
+    }
+
+    function getDefaultFragrancesText() {
+      return DEFAULT_ADMIN_FRAGRANCES.join(', ');
+    }
+
+    function syncFragranceField() {
+      var category = document.getElementById('category').value;
+      var fragrancesInput = document.getElementById('fragrances');
+
+      if (!fragrancesInput) return;
+
+      if (categoryNeedsFragrances(category)) {
+        if (!fragrancesInput.value.trim() || fragrancesInput.dataset.autofilled === 'true') {
+          fragrancesInput.value = getDefaultFragrancesText();
+          fragrancesInput.dataset.autofilled = 'true';
+        }
+        fragrancesInput.disabled = false;
+        fragrancesInput.placeholder = 'Fragrances disponibles';
+      } else {
+        if (fragrancesInput.dataset.autofilled === 'true') {
+          fragrancesInput.value = '';
+        }
+        fragrancesInput.disabled = true;
+        fragrancesInput.placeholder = 'Pas de choix parfum pour cette catégorie';
+      }
+    }
+
+    function normalizeTextList(value) {
+      if (Array.isArray(value)) {
+        return value.join(', ');
+      }
+      return String(value || '');
+    }
+
+    function getAdminMessage() {
+      return document.getElementById('adminMessage');
+    }
+
+    function setAdminMessage(text, color) {
+      var message = getAdminMessage();
+      message.textContent = text;
+      message.style.color = color || '#2c2c2c';
+    }
+
+    function setFormMode(mode) {
+      var isEdit = mode === 'edit';
+      document.querySelector('.admin-title').textContent = isEdit ? 'Modifier un produit' : 'Ajouter un produit';
+      document.getElementById('saveProductBtn').textContent = isEdit ? 'Enregistrer les modifications' : 'Ajouter le produit';
+    }
+
+    function clearProductForm(keepPassword) {
+      var password = document.getElementById('password').value;
+      document.getElementById('adminProductForm').reset();
+      document.getElementById('productId').value = '';
+      document.getElementById('productPicker').value = '';
+      document.getElementById('inStock').checked = true;
+      if (keepPassword) {
+        document.getElementById('password').value = password;
+      }
+      setFormMode('add');
+      syncFragranceField();
+    }
+
+    function fillProductForm(product) {
+      document.getElementById('productId').value = product.id || '';
+      document.getElementById('name').value = product.name || '';
+      document.getElementById('category').value = product.category || 'bougies';
+      document.getElementById('price').value = product.price || 0;
+      document.getElementById('description').value = product.description || '';
+      document.getElementById('notes').value = normalizeTextList(product.notes);
+      document.getElementById('fragrances').value = normalizeTextList(product.fragrances);
+      document.getElementById('fragrances').dataset.autofilled = product.fragrances && product.fragrances.length ? 'false' : 'true';
+      document.getElementById('weight').value = product.weight || '';
+      document.getElementById('stock').value = product.stock == null ? 0 : product.stock;
+      document.getElementById('image').value = product.image || '';
+      document.getElementById('inStock').checked = product.inStock !== false;
+      document.getElementById('productPicker').value = product.id || '';
+      setFormMode('edit');
+      syncFragranceField();
+    }
+
+    function loadProductsForAdmin() {
+      var picker = document.getElementById('productPicker');
+      picker.innerHTML = '<option value="">Chargement des produits...</option>';
+
+      return fetch('/api/products')
+      .then(function(response) {
+        return response.json().then(function(data) {
+          if (!response.ok) {
+            throw new Error(data.details || data.message || data.error || 'Impossible de charger les produits');
+          }
+          return Array.isArray(data) ? data : [];
+        });
+      })
+      .then(function(products) {
+        window.ADMIN_PRODUCTS = products;
+        picker.innerHTML = '<option value="">Charger un produit existant...</option>'
+          + products.map(function(product) {
+            var status = product.inStock === false ? ' - rupture' : '';
+            return '<option value="' + escapeHtml(product.id) + '">' + escapeHtml(product.name || product.id) + status + '</option>';
+          }).join('');
+      })
+      .catch(function(error) {
+        window.ADMIN_PRODUCTS = [];
+        picker.innerHTML = '<option value="">Erreur de chargement</option>';
+        setAdminMessage(error.message || 'Erreur de chargement des produits.', 'red');
+      });
+    }
+
+    function getSelectedProduct(id) {
+      return (window.ADMIN_PRODUCTS || []).find(function(product) {
+        return product.id === id;
+      });
+    }
+
+    function saveProduct(product, isEdit) {
+      product.action = isEdit ? 'updateProduct' : 'addProduct';
+      product.update = isEdit;
+
       return fetch('/api/products', {
         method: 'POST',
         headers: {
@@ -205,10 +417,30 @@
       });
     }
 
+    document.getElementById('category').addEventListener('change', syncFragranceField);
+    document.getElementById('fragrances').addEventListener('input', function() {
+      this.dataset.autofilled = 'false';
+    });
+    document.getElementById('productPicker').addEventListener('change', function() {
+      var product = getSelectedProduct(this.value);
+      if (product) {
+        fillProductForm(product);
+        setAdminMessage('Produit chargé. Vous pouvez modifier le stock, les parfums ou les informations.', '#2c2c2c');
+      }
+    });
+    document.getElementById('newProductBtn').addEventListener('click', function() {
+      clearProductForm(true);
+      setAdminMessage('Mode ajout nouveau produit.', '#2c2c2c');
+    });
+    syncFragranceField();
+    loadProductsForAdmin();
+
     document.getElementById('adminProductForm').addEventListener('submit', function(e) {
       e.preventDefault();
 
       var category = document.getElementById('category').value;
+      var productId = document.getElementById('productId').value;
+      var isEdit = !!productId;
 
       var labels = {
         fondants: 'Fondants',
@@ -219,33 +451,39 @@
       };
 
       var product = {
+        id: productId,
         name: document.getElementById('name').value,
         category: category,
         categoryLabel: labels[category] || 'Bougies',
         price: document.getElementById('price').value,
         description: document.getElementById('description').value,
         notes: document.getElementById('notes').value,
-        fragrances: document.getElementById('fragrances').value,
+        fragrances: categoryNeedsFragrances(category) ? document.getElementById('fragrances').value : '',
         weight: document.getElementById('weight').value,
         stock: document.getElementById('stock').value,
         image: document.getElementById('image').value,
-        inStock: true,
+        inStock: document.getElementById('inStock').checked,
         password: document.getElementById('password').value
       };
 
-      var message = document.getElementById('adminMessage');
-      message.textContent = 'Ajout en cours...';
-      message.style.color = '#2c2c2c';
+      setAdminMessage(isEdit ? 'Modification en cours...' : 'Ajout en cours...', '#2c2c2c');
 
-      createProduct(product)
-      .then(function() {
-        message.textContent = 'Produit ajouté avec succès.';
-        message.style.color = 'green';
-        document.getElementById('adminProductForm').reset();
+      saveProduct(product, isEdit)
+      .then(function(data) {
+        setAdminMessage(isEdit ? 'Produit modifié avec succès.' : 'Produit ajouté avec succès.', 'green');
+        if (!isEdit) {
+          clearProductForm(true);
+        }
+        return loadProductsForAdmin().then(function() {
+          if (isEdit) {
+            document.getElementById('productPicker').value = productId;
+          } else if (data && data.id) {
+            document.getElementById('productPicker').value = data.id;
+          }
+        });
       })
       .catch(function(error) {
-        message.textContent = error.message || 'Erreur lors de l’ajout du produit.';
-        message.style.color = 'red';
+        setAdminMessage(error.message || 'Erreur lors de l’enregistrement du produit.', 'red');
       });
     });
   </script>

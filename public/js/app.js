@@ -4,69 +4,7 @@
 // ========================================
 
 // ---- PRODUITS ----
-var PRODUCTS = [
-  { id: 'B001', name: "Fleur d'Oranger", category: 'bougies', categoryLabel: 'Bougies', price: 35,
-    description: "Une bougie majestueuse qui capture l'essence florale de la fleur d'oranger, illuminant votre intérieur de sa fraîcheur délicate et sophistiquée.",
-    notes: ["Fleur d'oranger", 'Jasmin', 'Bois de santal'], weight: '300g',
-    stock: 20,
-    image: 'imgs/aery-good-vibes-premium-scented-candle-packaging.jpg', inStock: true },
-
-  { id: 'B002', name: 'Vanille Bourbon', category: 'bougies', categoryLabel: 'Bougies', price: 32,
-    description: "Une odeur chaleureuse et enveloppante de vanille Bourbon, associée à des notes gourmandes de fève tonka et de caramel fondant.",
-    notes: ['Vanille', 'Fève tonka', 'Caramel'], weight: '300g',
-    stock: 10,
-    image: 'imgs/premium-scented-candle-branding-mockup.jpg', inStock: true },
-
-  { id: 'B003', name: 'Rose Damascena', category: 'bougies', categoryLabel: 'Bougies', price: 38,
-    description: "Une rose complexe et mystique, évoquant les jardins Damascènes avec des pétales de rose, du patchouli terreux et du musc blanc velouté.",
-    notes: ['Rose', 'Patchouli', 'Musc blanc'], weight: '300g',
-    stock: 15,
-    image: 'imgs/luxury-scented-candle-lifestyle-photography.jpg', inStock: true },
-
-  { id: 'B004', name: 'Nuit Ambrée', category: 'bougies', categoryLabel: 'Bougies', price: 40,
-    description: "Un accord chaud et sensuel d'ambre, de bois précieux et de musc blanc. La bougie idéale pour les soirées d'hiver.",
-    notes: ['Ambre', 'Bois de cèdre', 'Musc'], weight: '300g',
-    stock: 5,
-    image: 'imgs/luxury_scented_candle_warm_lighting_lifestyle.jpg', inStock: true },
-
-  { id: 'F001', name: 'Café Gourmet', category: 'fondants', categoryLabel: 'Fondants', price: 18,
-    description: "Un coffret de 12 fondants qui libéreront chez vous l'arôme d'un café artisanal aux notes de crème onctueuse et de chocolat.",
-    notes: ['Café', 'Crème', 'Chocolat'], weight: 'Pack 12',
-    stock: 20,
-    image: 'imgs/premium-scented-candle-luxury-packaging-branding.jpg', inStock: true },
-
-  { id: 'F002', name: 'Lavande Provençale', category: 'fondants', categoryLabel: 'Fondants', price: 16,
-    description: "Les champs de lavande en fleurs capturés dans ces fondants apaisants, accompagnés de camomille délicate et de miel doré.",
-    notes: ['Lavande', 'Camomille', 'Miel'], weight: 'Pack 12',
-    stock: 25,
-    image: 'imgs/luxury-scented-candles-and-diffusers-lifestyle.jpg', inStock: true },
-
-  { id: 'K001', name: 'Oud Royal', category: 'bakhour', categoryLabel: 'Bakhour', price: 45,
-    description: "Un bakhour d'exception aux notes profondes d'oud, relevées par la chaleur de l'ambre et la sensualité du musc.",
-    notes: ['Oud', 'Ambre', 'Musc'], weight: '50g',
-    stock: 10,
-    image: 'imgs/elegant-gold-geometric-bakhour-burner-home-decor.jpg', inStock: true },
-
-  { id: 'K002', name: 'Mysore Santal', category: 'bakhour', categoryLabel: 'Bakhour', price: 42,
-    description: "Un bois de santal précieux du Mysore, associé au bois de rose et à des touches vanillées pour une atmosphère raffinée.",
-    notes: ['Santal', 'Bois de rose', 'Vanille'], weight: '50g',
-    stock: 15,
-    image: 'imgs/elegant-golden-butterfly-bakhour-burner-set.jpg', inStock: true },
-
-  { id: 'D001', name: 'Diffuseur Élégant', category: 'diffuseurs', categoryLabel: 'Diffuseurs', price: 28,
-    description: "Un diffuseur raffiné pour diffuser votre parfum préféré avec élégance.",
-    notes: ['Parfum au choix'], weight: 'Unique',
-    stock: 10,
-    image: 'imgs/elegant-gold-bakhour-incense-burner-home-decor.jpg', inStock: true },
-
-  { id: 'PP001', name: 'Poudre Parfumée', category: 'poudre-parfumee', categoryLabel: 'Poudre parfumée', price: 35,
-    description: "Une poudre parfumée délicate à personnaliser avec la fragrance de votre choix.",
-    notes: ['Parfum au choix'], weight: '100g',
-    stock: 15,
-    image: 'imgs/white-onyx-marble-candle-holders-luxury-decor.jpg', inStock: true }
-];
-
-var PRODUCTS_CACHE_KEY = 'flambeau_products_cache_v1';
+var PRODUCTS = [];
 var DEFAULT_PRODUCT_IMAGE = 'imgs/aery-good-vibes-premium-scented-candle-packaging.jpg';
 var DEFAULT_FRAGRANCES = [
   'Oud',
@@ -103,11 +41,26 @@ function requiresFragranceChoice(product) {
   return product && FRAGRANCE_CATEGORIES.indexOf(normalizeCategoryName(product.category)) !== -1;
 }
 
+function isProductAvailable(product) {
+  return !!product && product.inStock !== false;
+}
+
+function getProductActionLabel(product) {
+  if (!isProductAvailable(product)) return 'Rupture';
+  return requiresFragranceChoice(product) ? 'Choisir parfum' : 'Ajouter au panier';
+}
+
 function getProductFragrances(product) {
+  var fragrances = DEFAULT_FRAGRANCES.slice();
   if (product && Array.isArray(product.fragrances) && product.fragrances.length > 0) {
-    return product.fragrances;
+    product.fragrances.forEach(function(name) {
+      name = String(name || '').trim();
+      if (name && fragrances.indexOf(name) === -1) {
+        fragrances.push(name);
+      }
+    });
   }
-  return DEFAULT_FRAGRANCES;
+  return fragrances;
 }
 
 function escapeHtml(value) {
@@ -131,26 +84,13 @@ function safeProductId(value) {
   return encodeURIComponent(String(value || ''));
 }
 
-function readCachedProducts() {
-  try {
-    var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
-    if (!raw) return [];
-    var cached = JSON.parse(raw);
-    if (!cached || !Array.isArray(cached.products)) return [];
-    if (Date.now() - cached.savedAt > 10 * 60 * 1000) return [];
-    return cached.products;
-  } catch(e) {
-    return [];
-  }
-}
-
-function saveCachedProducts(products) {
-  try {
-    localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({
-      savedAt: Date.now(),
-      products: products
-    }));
-  } catch(e) {}
+function normalizeProductKeyPart(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
 }
 
 function loadProductsFromBackend(callback) {
@@ -162,16 +102,10 @@ function loadProductsFromBackend(callback) {
     callback();
   }
 
-  var fallbackTimer = setTimeout(function() {
-    console.warn('Chargement API trop long, affichage des produits locaux');
-    finish();
-  }, 2500);
-
-  var cachedProducts = readCachedProducts();
-  if (cachedProducts.length > 0) {
-    PRODUCTS = cachedProducts;
-    setTimeout(finish, 0);
-  }
+  try {
+    localStorage.removeItem('flambeau_products_cache_v1');
+    localStorage.removeItem('flambeau_products_cache_v2');
+  } catch(e) {}
 
   function normalizeProducts(products) {
     if (products && Array.isArray(products.products)) {
@@ -183,6 +117,9 @@ function loadProductsFromBackend(callback) {
     if (!Array.isArray(products)) {
       return [];
     }
+
+    var seenIds = {};
+    var seenKeys = {};
 
     return products
       .filter(function(p) {
@@ -218,6 +155,13 @@ function loadProductsFromBackend(callback) {
           image: safeImageUrl(p.image || p.Image || p.imageUrl || p.url || p.URL || ''),
           inStock: String(p.inStock).toUpperCase() !== 'FALSE'
         };
+      })
+      .filter(function(p) {
+        var key = normalizeProductKeyPart(p.category) + '::' + normalizeProductKeyPart(p.name);
+        if (seenIds[p.id] || seenKeys[key]) return false;
+        seenIds[p.id] = true;
+        seenKeys[key] = true;
+        return true;
       });
   }
 
@@ -228,16 +172,12 @@ function loadProductsFromBackend(callback) {
     })
     .then(function(products) {
       var cleanProducts = normalizeProducts(products);
-      if (cleanProducts.length > 0) {
-        clearTimeout(fallbackTimer);
-        PRODUCTS = cleanProducts;
-        saveCachedProducts(cleanProducts);
-      }
+      PRODUCTS = cleanProducts;
       finish();
     })
     .catch(function(error) {
-      clearTimeout(fallbackTimer);
       console.warn('Impossible de charger les produits depuis le backend:', error);
+      PRODUCTS = [];
       finish();
     });
 }
@@ -500,7 +440,8 @@ function initHome() {
         + '<a href="product.html?id=' + safeProductId(p.id) + '">'
         + '<div class="product-card__image-container">'
         + '<img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" class="product-card__image" loading="lazy" decoding="async">'
-        + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '">' + (requiresFragranceChoice(p) ? 'Choisir parfum' : 'Ajouter au panier') + '</button></div>'
+        + (!isProductAvailable(p) ? '<span class="product-card__badge product-card__badge--soldout">Rupture</span>' : '')
+        + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '"' + (!isProductAvailable(p) ? ' disabled' : '') + '>' + getProductActionLabel(p) + '</button></div>'
         + '</div>'
         + '<div class="product-card__info">'
         + '<div class="product-card__category">' + escapeHtml(p.categoryLabel) + '</div>'
@@ -514,6 +455,10 @@ function initHome() {
         e.preventDefault(); e.stopPropagation();
         var id = btn.dataset.id;
         var product = getProductById(id);
+        if (!isProductAvailable(product)) {
+          showToast('Ce produit est en rupture de stock');
+          return;
+        }
         if (requiresFragranceChoice(product)) {
           window.location.href = 'product.html?id=' + safeProductId(id);
           return;
@@ -584,8 +529,8 @@ function renderShopProducts(category) {
       + '<a href="product.html?id=' + safeProductId(p.id) + '">'
       + '<div class="product-card__image-container">'
       + '<img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" class="product-card__image" loading="lazy" decoding="async">'
-      + (!p.inStock ? '<span class="product-card__badge product-card__badge--soldout">Rupture</span>' : '')
-      + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '">' + (requiresFragranceChoice(p) ? 'Choisir parfum' : 'Ajouter au panier') + '</button></div>'
+      + (!isProductAvailable(p) ? '<span class="product-card__badge product-card__badge--soldout">Rupture</span>' : '')
+      + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '"' + (!isProductAvailable(p) ? ' disabled' : '') + '>' + getProductActionLabel(p) + '</button></div>'
       + '</div>'
       + '<div class="product-card__info">'
       + '<div class="product-card__category">' + escapeHtml(p.categoryLabel) + '</div>'
@@ -599,6 +544,10 @@ function renderShopProducts(category) {
       e.preventDefault(); e.stopPropagation();
       var id = btn.dataset.id;
       var product = getProductById(id);
+      if (!isProductAvailable(product)) {
+        showToast('Ce produit est en rupture de stock');
+        return;
+      }
       if (requiresFragranceChoice(product)) {
         window.location.href = 'product.html?id=' + safeProductId(id);
         return;
@@ -728,7 +677,15 @@ function initProduct() {
 
   var addBtn = document.querySelector('.product-detail__add-btn');
   if (addBtn) {
+    if (!isProductAvailable(product)) {
+      addBtn.textContent = 'Rupture de stock';
+      addBtn.disabled = true;
+    }
     addBtn.addEventListener('click', function() {
+      if (!isProductAvailable(product)) {
+        showToast('Ce produit est en rupture de stock');
+        return;
+      }
       var fragranceSelect = document.getElementById('product-fragrance');
       var fragrance = fragranceSelect ? fragranceSelect.value : '';
       if (requiresFragranceChoice(product) && !fragrance) {
@@ -756,7 +713,8 @@ function initProduct() {
           + '<a href="product.html?id=' + safeProductId(p.id) + '">'
           + '<div class="product-card__image-container">'
           + '<img src="' + escapeHtml(safeImageUrl(p.image)) + '" alt="' + escapeHtml(p.name) + '" class="product-card__image" loading="lazy" decoding="async">'
-          + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '">' + (requiresFragranceChoice(p) ? 'Choisir parfum' : 'Ajouter au panier') + '</button></div>'
+          + (!isProductAvailable(p) ? '<span class="product-card__badge product-card__badge--soldout">Rupture</span>' : '')
+          + '<div class="product-card__quick-add"><button class="product-card__quick-add-btn" data-id="' + escapeHtml(p.id) + '"' + (!isProductAvailable(p) ? ' disabled' : '') + '>' + getProductActionLabel(p) + '</button></div>'
           + '</div><div class="product-card__info">'
           + '<div class="product-card__category">' + escapeHtml(p.categoryLabel) + '</div>'
           + '<h3 class="product-card__name">' + escapeHtml(p.name) + '</h3>'
@@ -768,6 +726,10 @@ function initProduct() {
           e.preventDefault(); e.stopPropagation();
           var pid = btn.dataset.id;
           var product = getProductById(pid);
+          if (!isProductAvailable(product)) {
+            showToast('Ce produit est en rupture de stock');
+            return;
+          }
           if (requiresFragranceChoice(product)) {
             window.location.href = 'product.html?id=' + safeProductId(pid);
             return;
@@ -1015,4 +977,3 @@ document.addEventListener('DOMContentLoaded', function() {
     else if (page === 'confirmation') initConfirmation();
   });
 });
-

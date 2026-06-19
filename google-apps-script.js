@@ -45,6 +45,10 @@
           return addProduct(data);
         }
 
+        if (data.action === 'updateProduct') {
+          return updateProduct(data);
+        }
+
         if (data.action === 'order') {
           var sheetStatus = 'saved';
           try {
@@ -244,44 +248,206 @@
 
     var sheet = ss.getSheetByName('Produits') || ss.insertSheet('Produits');
     var cleanProduct = validateProductInput(data);
+    ensureProductSheetHeaders(sheet);
 
-    if (sheet.getLastRow() === 0) {
-        sheet.appendRow([
-          'id',
-          'name',
-          'category',
-          'categoryLabel',
-          'price',
-          'description',
-          'notes',
-          'fragrances',
-          'weight',
-          'stock',
-          'image',
-          'inStock'
-        ]);
-      }
+    var values = sheet.getDataRange().getValues();
+    var headerRowIndex = findProductHeaderRow(values);
+    var headers = values[headerRowIndex];
+    var id = cleanText(data.id, 80) || 'P' + Date.now();
+    var rowData = buildProductRowData(id, cleanProduct);
+    var targetRow = findProductRowByIdOrIdentity(values, headers, headerRowIndex, id, cleanProduct);
 
-      var id = 'P' + Date.now();
+    if (targetRow !== -1) {
+      writeProductRow(sheet, headers, targetRow, rowData);
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'ok', type: 'product', id: id, updated: true }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
 
-    sheet.appendRow([
-      id,
-      cleanProduct.name,
-      cleanProduct.category,
-      cleanProduct.categoryLabel,
-      cleanProduct.price,
-      cleanProduct.description,
-      cleanProduct.notes,
-      cleanProduct.fragrances,
-      cleanProduct.weight,
-      cleanProduct.stock,
-      cleanProduct.image,
-      cleanProduct.inStock ? 'TRUE' : 'FALSE'
-    ]);
+    sheet.appendRow(headers.map(function(header) {
+      return getProductValueForHeader(rowData, header);
+    }));
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok', type: 'product', id: id, created: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  function updateProduct(data) {
+    if (data.password !== getAdminPassword()) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'error', message: 'Mot de passe incorrect' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var id = cleanText(data.id, 80);
+    if (!id) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'error', message: 'ID produit manquant' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var ss = getSpreadsheet();
+    if (!ss) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configurÃ©' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var sheet = ss.getSheetByName('Produits') || ss.insertSheet('Produits');
+    ensureProductSheetHeaders(sheet);
+
+    var values = sheet.getDataRange().getValues();
+    var headerRowIndex = findProductHeaderRow(values);
+    var headers = values[headerRowIndex];
+    var idCol = findHeaderIndex(headers, ['id', 'ID', 'Id']);
+    if (idCol === -1) {
+      return ContentService
+        .createTextOutput(JSON.stringify({ status: 'error', message: 'Colonne id introuvable dans la feuille Produits' }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    var cleanProduct = validateProductInput(data);
+    var rowData = buildProductRowData(id, cleanProduct);
+    var targetRow = findProductRowByIdOrIdentity(values, headers, headerRowIndex, id, cleanProduct);
+
+    if (targetRow === -1) {
+      sheet.appendRow(headers.map(function(header) {
+        return getProductValueForHeader(rowData, header);
+      }));
 
       return ContentService
-        .createTextOutput(JSON.stringify({ status: 'ok', type: 'product', id: id }))
+        .createTextOutput(JSON.stringify({ status: 'ok', type: 'product', id: id, created: true }))
         .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    writeProductRow(sheet, headers, targetRow, rowData);
+
+    return ContentService
+      .createTextOutput(JSON.stringify({ status: 'ok', type: 'product', id: id, updated: true }))
+      .setMimeType(ContentService.MimeType.JSON);
+  }
+
+  function ensureProductSheetHeaders(sheet) {
+    if (sheet.getLastRow() === 0) {
+      sheet.appendRow([
+        'id',
+        'name',
+        'category',
+        'categoryLabel',
+        'price',
+        'description',
+        'notes',
+        'fragrances',
+        'weight',
+        'stock',
+        'image',
+        'inStock'
+      ]);
+    }
+  }
+
+  function findHeaderIndex(headers, names) {
+    var normalized = headers.map(function(header) {
+      return String(header || '').trim();
+    });
+
+    for (var i = 0; i < names.length; i++) {
+      var index = normalized.indexOf(names[i]);
+      if (index !== -1) return index;
+    }
+
+    return -1;
+  }
+
+  function normalizeProductKeyPart(value) {
+    return String(value || '')
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function productIdentityKey(category, name) {
+    var cleanCategory = normalizeProductKeyPart(category);
+    var cleanName = normalizeProductKeyPart(name);
+    return cleanCategory && cleanName ? cleanCategory + '::' + cleanName : '';
+  }
+
+  function buildProductRowData(id, cleanProduct) {
+    return {
+      id: id,
+      name: cleanProduct.name,
+      category: cleanProduct.category,
+      categoryLabel: cleanProduct.categoryLabel,
+      price: cleanProduct.price,
+      description: cleanProduct.description,
+      notes: cleanProduct.notes,
+      fragrances: cleanProduct.fragrances,
+      weight: cleanProduct.weight,
+      stock: cleanProduct.stock,
+      image: cleanProduct.image,
+      inStock: cleanProduct.inStock ? 'TRUE' : 'FALSE'
+    };
+  }
+
+  function findProductRowByIdOrIdentity(values, headers, headerRowIndex, id, cleanProduct) {
+    var idCol = findHeaderIndex(headers, ['id', 'ID', 'Id']);
+    var nameCol = findHeaderIndex(headers, ['name', 'nom', 'Nom', 'Name']);
+    var categoryCol = findHeaderIndex(headers, ['category', 'categorie', 'catÃ©gorie', 'Category']);
+    var wantedKey = productIdentityKey(cleanProduct.category, cleanProduct.name);
+
+    for (var i = headerRowIndex + 1; i < values.length; i++) {
+      if (idCol !== -1 && String(values[i][idCol] || '').trim() === id) {
+        return i + 1;
+      }
+
+      if (nameCol !== -1 && categoryCol !== -1 && wantedKey) {
+        var rowKey = productIdentityKey(values[i][categoryCol], values[i][nameCol]);
+        if (rowKey === wantedKey) {
+          return i + 1;
+        }
+      }
+    }
+
+    return -1;
+  }
+
+  function writeProductRow(sheet, headers, targetRow, rowData) {
+    headers.forEach(function(header, index) {
+      sheet.getRange(targetRow, index + 1).setValue(getProductValueForHeader(rowData, header));
+    });
+  }
+
+  function getProductValueForHeader(rowData, header) {
+    var key = String(header || '').trim();
+    var normalized = key.toLowerCase();
+    var aliases = {
+      id: 'id',
+      name: 'name',
+      nom: 'name',
+      category: 'category',
+      categorie: 'category',
+      'catÃ©gorie': 'category',
+      categorylabel: 'categoryLabel',
+      price: 'price',
+      prix: 'price',
+      description: 'description',
+      notes: 'notes',
+      fragrances: 'fragrances',
+      parfums: 'fragrances',
+      weight: 'weight',
+      poids: 'weight',
+      stock: 'stock',
+      image: 'image',
+      imageurl: 'image',
+      url: 'image',
+      instock: 'inStock',
+      disponible: 'inStock'
+    };
+    var dataKey = aliases[normalized] || key;
+    return rowData.hasOwnProperty(dataKey) ? rowData[dataKey] : '';
   }
 
   function getAdminPassword() {

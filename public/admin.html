@@ -188,28 +188,11 @@
 
   <script src="js/app.js"></script>
   <script>
-    var csrfToken = null;
-
-    function loginAdmin(password) {
-      return fetch('/api/admin/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password: password })
-      }).then(function(response) {
-        return response.json().then(function(data) {
-          if (!response.ok) throw new Error(data.error || 'Connexion admin refusee');
-          csrfToken = data.csrfToken;
-          return data;
-        });
-      });
-    }
-
     function createProduct(product) {
-      return fetch('/api/admin/products', {
+      return fetch('/api/products', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
-          'X-CSRF-Token': csrfToken
+          'Content-Type': 'application/json'
         },
         body: JSON.stringify(product)
       }).then(function(response) {
@@ -244,17 +227,15 @@
         weight: document.getElementById('weight').value,
         stock: document.getElementById('stock').value,
         image: document.getElementById('image').value,
-        inStock: true
+        inStock: true,
+        password: document.getElementById('password').value
       };
 
       var message = document.getElementById('adminMessage');
       message.textContent = 'Ajout en cours...';
       message.style.color = '#2c2c2c';
 
-      loginAdmin(document.getElementById('password').value)
-      .then(function() {
-        return createProduct(product);
-      })
+      createProduct(product)
       .then(function() {
         message.textContent = 'Produit ajouté avec succès.';
         message.style.color = 'green';

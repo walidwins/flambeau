@@ -254,5 +254,23 @@
     "stock": 86,
     "image": "imgs/premium-scented-candle-branding-mockup.jpg",
     "inStock": true
+  },
+  {
+    "id": "P1781889158049",
+    "name": "fraise",
+    "category": "fondants",
+    "categoryLabel": "Fondants",
+    "price": 800,
+    "description": "dfdfdfdfdfdf",
+    "notes": [
+      "oud"
+    ],
+    "fragrances": [
+      "musc"
+    ],
+    "weight": "100",
+    "stock": 50,
+    "image": "https://i.postimg.cc/hGkNKQqb/coffretdecouverte-fondantsparfumes-d991046c-f131-4e21-a228-ce861eb97438-1946x.webp",
+    "inStock": true
   }
 ]

@@ -226,6 +226,10 @@ h4 {
   color: var(--color-white);
 }
 
+.admin-secret-hotspot {
+  cursor: text;
+}
+
 .nav__menu {
   display: flex;
   gap: var(--space-lg);

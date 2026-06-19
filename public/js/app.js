@@ -427,7 +427,6 @@ function initNav() {
 
   cartDrawerEl = document.querySelector('.cart-drawer');
   renderCartDrawer();
-}
 
 // ---- HOME PAGE ----
 function initHome() {

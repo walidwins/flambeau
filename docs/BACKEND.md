@@ -1,74 +1,41 @@
-# Flambeau Backend
+# Backend Flambeau
 
-This project now runs through a real Node.js backend. Do not open `shop.html`
-directly with `file://`; start the server and use the local URL.
+Le site est servi depuis `public/`. Les endpoints Node servent de passerelle
+vers Google Apps Script et Hugging Face, sans exposer les secrets au navigateur.
 
-## Start
-
-1. Copy `.env.example` to `.env`.
-2. Change `ADMIN_PASSWORD` and `SESSION_SECRET`.
-3. Run:
+## Demarrage
 
 ```bash
+npm install
 npm start
 ```
 
-Open:
+Ouvrir ensuite:
 
 ```text
 http://localhost:3000
 ```
 
-## Structure
+## API active
 
-```text
-public/     Frontend served by the backend
-server/     Node.js backend
-data/       JSON database files
-docs/       Project documentation
-```
-
-## API
-
+- `GET /api/health`
 - `GET /api/products`
 - `GET /api/products/:id`
-- `POST /api/contact`
+- `POST /api/products`
 - `POST /api/orders`
+- `POST /api/contact`
+- `POST /api/chat`
 - `POST /api/admin/login`
-- `POST /api/admin/products`
 - `GET /api/admin/orders`
+- `GET /api/admin/integrations`
 - `POST /api/admin/logout`
 
-## Google Sheets
+## Stockage durable
 
-Orders are sent to Google Sheets and email through Apps Script. Contact
-messages are sent by email only.
+- Produits: feuille Google Sheets `Produits` via Apps Script.
+- Commandes: feuille Google Sheets `Commandes` via Apps Script.
+- Contact: email via Apps Script.
+- IA: Hugging Face via `/api/chat`.
 
-Recommended setup:
-
-```text
-GOOGLE_APPS_SCRIPT_URL=https://script.google.com/macros/s/xxx/exec
-```
-
-Copy `google-apps-script.js` into Apps Script, set `SHEET_ID` and
-`NOTIF_EMAIL`, deploy it as a web app, then paste the deployment URL into
-`.env`.
-
-Apps Script will append the order to `Commandes` and send a confirmation email
-to `NOTIF_EMAIL`. Contact messages are not appended to Google Sheets.
-
-Before testing real orders, run the `testEmailAuthorization` function once in
-Apps Script and accept the Google permission for `MailApp.sendEmail`.
-
-Advanced setup without Apps Script:
-
-```text
-GOOGLE_SHEET_ID=your_sheet_id
-GOOGLE_ORDERS_SHEET_NAME=Commandes
-GOOGLE_CLIENT_EMAIL=service-account@project.iam.gserviceaccount.com
-GOOGLE_PRIVATE_KEY=-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n
-```
-
-Share the Google Sheet with the service account email as editor.
-
-The backend creates the `Commandes` sheet tab and headers if they do not exist.
+`data/*.json` reste seulement utile comme historique ou secours local; Vercel
+ne doit pas l'utiliser comme stockage durable.

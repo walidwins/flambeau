@@ -1,5 +1,12 @@
 .env
+.env.local
+.env.production
+.env.development
+
 data/orders.json
+
 *.log
 logs/
+
 node_modules/
+.vercel/

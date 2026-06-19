@@ -8,6 +8,7 @@ const { URL } = require('url');
 const ROOT_DIR = path.resolve(__dirname, '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const DATA_DIR = path.join(ROOT_DIR, 'data');
+const PRODUCTS_FILE = path.join(DATA_DIR, 'products.json');
 const IS_VERCEL = Boolean(process.env.VERCEL);
 const ORDERS_FILE = IS_VERCEL ? path.join(os.tmpdir(), 'flambeau-orders.json') : path.join(DATA_DIR, 'orders.json');
 const ENV_FILE = path.join(ROOT_DIR, '.env');
@@ -20,10 +21,6 @@ const config = {
   adminPassword: process.env.ADMIN_PASSWORD || 'change-this-password',
   sessionSecret: process.env.SESSION_SECRET || crypto.randomBytes(32).toString('hex'),
   googleAppsScriptUrl: process.env.GOOGLE_APPS_SCRIPT_URL || '',
-  googleSheetId: process.env.GOOGLE_SHEET_ID || '',
-  googleOrdersSheetName: process.env.GOOGLE_ORDERS_SHEET_NAME || 'Commandes',
-  googleClientEmail: process.env.GOOGLE_CLIENT_EMAIL || '',
-  googlePrivateKey: normalizePrivateKey(process.env.GOOGLE_PRIVATE_KEY || ''),
   corsAllowedOrigins: parseList(process.env.CORS_ALLOWED_ORIGINS || ''),
   trustProxy: String(process.env.TRUST_PROXY || '').toLowerCase() === 'true'
 };
@@ -61,10 +58,6 @@ function loadEnvFile() {
       }
     });
   } catch (_) {}
-}
-
-function normalizePrivateKey(value) {
-  return String(value || '').replace(/\\n/g, '\n');
 }
 
 function parsePort(value) {
@@ -500,173 +493,6 @@ function rejectBadRequest(req, res) {
   return false;
 }
 
-function base64UrlJson(value) {
-  return Buffer.from(JSON.stringify(value)).toString('base64url');
-}
-
-async function getGoogleAccessToken() {
-  if (!config.googleClientEmail || !config.googlePrivateKey) {
-    return null;
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  const header = { alg: 'RS256', typ: 'JWT' };
-  const claim = {
-    iss: config.googleClientEmail,
-    scope: 'https://www.googleapis.com/auth/spreadsheets',
-    aud: 'https://oauth2.googleapis.com/token',
-    exp: now + 3600,
-    iat: now
-  };
-  const unsignedJwt = `${base64UrlJson(header)}.${base64UrlJson(claim)}`;
-  const signature = crypto
-    .createSign('RSA-SHA256')
-    .update(unsignedJwt)
-    .sign(config.googlePrivateKey, 'base64url');
-  const jwt = `${unsignedJwt}.${signature}`;
-
-  const response = await fetch('https://oauth2.googleapis.com/token', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-    body: new URLSearchParams({
-      grant_type: 'urn:ietf:params:oauth:grant-type:jwt-bearer',
-      assertion: jwt
-    })
-  });
-
-  const data = await response.json();
-  if (!response.ok) {
-    throw new Error(data.error_description || data.error || 'Google auth failed');
-  }
-
-  return data.access_token;
-}
-
-function orderToSheetRow(order) {
-  const items = order.items
-    .map((item) => {
-      const lineTotal = Number(item.price || 0) * Number(item.qty || 0);
-      return `${item.name}${item.fragrance ? ' - Parfum : ' + item.fragrance : ''} x${item.qty} | Prix : ${item.price} DH | Total : ${lineTotal} DH`;
-    })
-    .join('\n');
-  const fragrances = order.items
-    .map((item) => (item.fragrance ? `${item.name} : ${item.fragrance}` : ''))
-    .filter(Boolean)
-    .join('\n');
-
-  return [
-    cleanSheetCell(order.orderNum),
-    cleanSheetCell(order.date),
-    cleanSheetCell(order.customer.firstName),
-    cleanSheetCell(order.customer.lastName),
-    cleanSheetCell(order.customer.phone),
-    cleanSheetCell(order.customer.city),
-    cleanSheetCell(order.customer.postalCode),
-    cleanSheetCell(order.customer.address),
-    cleanSheetCell(items),
-    cleanSheetCell(fragrances),
-    order.total,
-    cleanSheetCell(order.status)
-  ];
-}
-
-function sheetHeaders() {
-  return [
-    'Numero commande',
-    'Date',
-    'Prenom',
-    'Nom',
-    'Telephone',
-    'Ville',
-    'Code postal',
-    'Adresse',
-    'Articles detailles',
-    'Parfums',
-    'Total',
-    'Statut'
-  ];
-}
-
-async function googleSheetsRequest(pathname, options = {}) {
-  const accessToken = await getGoogleAccessToken();
-  if (!accessToken) {
-    return { skipped: true, reason: 'Google service account not configured' };
-  }
-
-  const response = await fetch(`https://sheets.googleapis.com/v4/spreadsheets/${config.googleSheetId}${pathname}`, {
-    ...options,
-    headers: {
-      Authorization: `Bearer ${accessToken}`,
-      'Content-Type': 'application/json',
-      ...(options.headers || {})
-    }
-  });
-
-  const text = await response.text();
-  const data = text ? JSON.parse(text) : {};
-
-  if (!response.ok) {
-    throw new Error(data.error && data.error.message ? data.error.message : 'Google Sheets request failed');
-  }
-
-  return data;
-}
-
-async function ensureOrdersSheet() {
-  const spreadsheet = await googleSheetsRequest('?fields=sheets.properties.title');
-  if (spreadsheet.skipped) return spreadsheet;
-
-  const exists = (spreadsheet.sheets || []).some((sheet) => {
-    return sheet.properties && sheet.properties.title === config.googleOrdersSheetName;
-  });
-
-  if (!exists) {
-    await googleSheetsRequest(':batchUpdate', {
-      method: 'POST',
-      body: JSON.stringify({
-        requests: [
-          {
-            addSheet: {
-              properties: {
-                title: config.googleOrdersSheetName
-              }
-            }
-          }
-        ]
-      })
-    });
-  }
-
-  const sheetName = encodeURIComponent(config.googleOrdersSheetName);
-  await googleSheetsRequest(`/values/${sheetName}!A1:L1?valueInputOption=RAW`, {
-    method: 'PUT',
-    body: JSON.stringify({
-      values: [sheetHeaders()]
-    })
-  });
-
-  return { status: 'ready' };
-}
-
-async function appendOrderToGoogleSheet(order) {
-  if (!config.googleSheetId) {
-    return { status: 'skipped', reason: 'GOOGLE_SHEET_ID not configured' };
-  }
-
-  const ready = await ensureOrdersSheet();
-  if (ready.skipped) return ready;
-
-  const sheetName = encodeURIComponent(config.googleOrdersSheetName);
-  const data = await googleSheetsRequest(`/values/${sheetName}!A:L:append?valueInputOption=RAW&insertDataOption=INSERT_ROWS`, {
-    method: 'POST',
-    body: JSON.stringify({
-      values: [orderToSheetRow(order)]
-    })
-  });
-
-  return { status: 'saved', updatedRange: data.updates && data.updates.updatedRange };
-}
-
 async function sendOrderToAppsScript(order) {
   if (!config.googleAppsScriptUrl) {
     return { status: 'skipped', reason: 'GOOGLE_APPS_SCRIPT_URL not configured' };
@@ -728,6 +554,28 @@ async function readProductsFromAppsScript() {
   }
 
   return { status: 'ready', products: data };
+}
+
+async function readLocalProducts() {
+  return readJson(PRODUCTS_FILE, []);
+}
+
+function mergeProducts(primaryProducts, fallbackProducts) {
+  const merged = [];
+  const seen = new Set();
+
+  function addList(products) {
+    if (!Array.isArray(products)) return;
+    products.forEach((product) => {
+      if (!product || !product.id || seen.has(product.id)) return;
+      seen.add(product.id);
+      merged.push(product);
+    });
+  }
+
+  addList(primaryProducts);
+  addList(fallbackProducts);
+  return merged;
 }
 
 async function sendProductToAppsScript(product) {
@@ -818,23 +666,16 @@ async function handleApi(req, res, url) {
     try {
       const integration = await readProductsFromAppsScript();
       if (integration.status === 'skipped') {
-        sendJson(res, 503, {
-          ok: false,
-          error: 'Google Apps Script products is not configured',
-          details: integration.reason
-        });
+        sendJson(res, 200, await readLocalProducts());
         return;
       }
 
-      sendJson(res, 200, integration.products);
+      const products = Array.isArray(integration.products) ? integration.products : [];
+      sendJson(res, 200, mergeProducts(products, await readLocalProducts()));
       return;
     } catch (error) {
       console.warn('Products Google integration failed:', error.message);
-      sendJson(res, 502, {
-        ok: false,
-        error: 'Products Google Apps Script failed',
-        details: error.message
-      });
+      sendJson(res, 200, await readLocalProducts());
       return;
     }
   }
@@ -898,16 +739,17 @@ async function handleApi(req, res, url) {
 
   if (req.method === 'GET' && url.pathname.startsWith('/api/products/')) {
     const id = decodeURIComponent(url.pathname.replace('/api/products/', ''));
-    const integration = await readProductsFromAppsScript();
-    if (integration.status === 'skipped') {
-      sendJson(res, 503, {
-        ok: false,
-        error: 'Google Apps Script products is not configured',
-        details: integration.reason
-      });
-      return;
+    let products = [];
+
+    try {
+      const integration = await readProductsFromAppsScript();
+      products = Array.isArray(integration.products) ? integration.products : [];
+    } catch (error) {
+      console.warn('Product detail Google integration failed:', error.message);
     }
-    const products = Array.isArray(integration.products) ? integration.products : [];
+
+    products = mergeProducts(products, await readLocalProducts());
+
     const product = products.find((item) => item.id === id);
     product ? sendJson(res, 200, product) : sendError(res, 404, 'Product not found');
     return;
@@ -920,9 +762,7 @@ async function handleApi(req, res, url) {
     await writeJson(ORDERS_FILE, orders);
 
     try {
-      const integration = config.googleAppsScriptUrl
-        ? await sendOrderToAppsScript(order)
-        : await appendOrderToGoogleSheet(order);
+      const integration = await sendOrderToAppsScript(order);
 
       if (integration && integration.status === 'skipped') {
         console.warn('Order Google integration skipped:', integration.reason);
@@ -978,12 +818,11 @@ async function handleApi(req, res, url) {
         provider: null
       },
       googleSheets: {
-        enabled: Boolean(config.googleAppsScriptUrl || (config.googleSheetId && config.googleClientEmail && config.googlePrivateKey)),
-        provider: config.googleAppsScriptUrl ? 'apps-script' : 'google-service-account',
+        enabled: Boolean(config.googleAppsScriptUrl),
+        provider: 'apps-script',
         appsScriptConfigured: Boolean(config.googleAppsScriptUrl),
-        sheetIdConfigured: Boolean(config.googleSheetId),
-        serviceAccountConfigured: Boolean(config.googleClientEmail && config.googlePrivateKey),
-        ordersSheetName: config.googleOrdersSheetName
+        productsSheetName: 'Produits',
+        ordersSheetName: 'Commandes'
       }
     });
     return;
@@ -1076,8 +915,8 @@ if (require.main === module) {
     if (config.adminPassword === 'change-this-password') {
       console.warn('Set ADMIN_PASSWORD in .env before production use.');
     }
-    if (!config.googleAppsScriptUrl && (!config.googleSheetId || !config.googleClientEmail || !config.googlePrivateKey)) {
-      console.warn('Google Sheets sync disabled: set GOOGLE_APPS_SCRIPT_URL or service account values in .env.');
+    if (!config.googleAppsScriptUrl) {
+      console.warn('Google Apps Script sync disabled: set GOOGLE_APPS_SCRIPT_URL in .env.');
     }
   });
 

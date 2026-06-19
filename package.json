@@ -6,8 +6,8 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node server/index.js",
-    "check": "node --check server/index.js && node --check public/js/app.js && node --check public/js/contact.js",
-    "check:prod": "node --check server/index.js && node --check public/js/app.js && node --check public/js/contact.js",
+    "check": "node --check server/index.js && node --check api/chat.js && node --check api/products.js && node --check public/js/app.js && node --check public/js/contact.js && node --check public/js/admin-access.js && node --check public/js/ai-chat.js",
+    "check:prod": "npm run check",
     "build": "echo \"Static site - no build needed\""
   },
   "engines": {

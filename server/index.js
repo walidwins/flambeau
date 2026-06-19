@@ -107,7 +107,12 @@ function validateRuntimeConfig() {
   }
 
   if (errors.length > 0) {
-    throw new Error(`Invalid production configuration:\n- ${errors.join('\n- ')}`);
+    const message = `Invalid production configuration:\n- ${errors.join('\n- ')}`;
+    if (IS_VERCEL) {
+      console.warn(message);
+      return;
+    }
+    throw new Error(message);
   }
 }
 
@@ -948,7 +953,9 @@ async function serveStatic(req, res, url) {
 
 async function requestHandler(req, res) {
   try {
-    req.setTimeout(15_000);
+    if (typeof req.setTimeout === 'function') {
+      req.setTimeout(15_000);
+    }
     applyCors(req, res);
 
     if (rejectBadRequest(req, res)) return;

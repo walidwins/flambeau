@@ -2579,6 +2579,171 @@ h4 {
   margin-top: 0 !important;
 }
 
+/* ---------- Responsive Structure Polish ---------- */
+html,
+body {
+  max-width: 100%;
+  overflow-x: hidden;
+  text-size-adjust: 100%;
+}
+
+.container {
+  padding-left: clamp(16px, 4vw, 32px);
+  padding-right: clamp(16px, 4vw, 32px);
+}
+
+.btn,
+.hero__cta,
+.hero__link,
+.filter-btn,
+.cart-page__checkout-btn,
+.product-detail__add-btn,
+.cart-drawer__checkout,
+.admin-btn {
+  min-height: 44px;
+}
+
+.nav {
+  backdrop-filter: saturate(120%) blur(10px);
+}
+
+.nav__menu-toggle,
+.nav__cart-btn,
+.cart-drawer__close,
+.product-detail__qty-btn,
+.cart-page__item-qty-btn {
+  touch-action: manipulation;
+}
+
+.products-grid {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 230px), 1fr));
+}
+
+.product-card {
+  min-width: 0;
+}
+
+.product-card__name,
+.cart-page__item-name,
+.product-detail__title {
+  overflow-wrap: anywhere;
+}
+
+.shop-filters .container {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scroll-snap-type: x proximity;
+  -webkit-overflow-scrolling: touch;
+  padding-bottom: 4px;
+}
+
+.shop-filters .container::-webkit-scrollbar {
+  height: 0;
+}
+
+.filter-btn {
+  flex: 0 0 auto;
+  scroll-snap-align: start;
+  white-space: nowrap;
+}
+
+.product-detail__main-image {
+  aspect-ratio: 1 / 1;
+}
+
+.cart-page__item-subtotal {
+  justify-self: end;
+  white-space: nowrap;
+}
+
+@media (max-width: 1024px) {
+  .nav__menu {
+    align-items: stretch;
+    gap: 0;
+    padding: var(--space-md);
+    overflow-y: auto;
+  }
+
+  .nav__menu li {
+    width: 100%;
+  }
+
+  .nav__menu .nav__link {
+    display: flex;
+    align-items: center;
+    min-height: 52px;
+    width: 100%;
+    border-bottom: 1px solid rgba(184, 149, 110, 0.18);
+  }
+
+  .product-detail__main-image {
+    max-height: 620px;
+  }
+}
+
+@media (max-width: 768px) {
+  .hero__content {
+    width: 100%;
+  }
+
+  .hero__actions {
+    align-items: stretch;
+    gap: var(--space-sm);
+  }
+
+  .hero__cta,
+  .hero__link {
+    justify-content: center;
+  }
+
+  .brand-story__image {
+    aspect-ratio: 16 / 11;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-sm);
+  }
+
+  .product-card__info {
+    padding: var(--space-sm);
+  }
+
+  .product-card__name {
+    min-height: auto;
+    font-size: 1rem;
+  }
+
+  .product-detail__add-to-cart {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .product-detail__fragrance-select {
+    max-width: none;
+  }
+
+  .cart-drawer {
+    max-width: min(420px, 100vw);
+  }
+
+  .cart-page__item {
+    grid-template-columns: 88px minmax(0, 1fr);
+  }
+
+  .cart-page__item-subtotal {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .cart-page__item-controls {
+    flex-wrap: wrap;
+    gap: var(--space-sm);
+  }
+}
+
 @media (max-width: 640px) {
   .cart-page__items,
   .cart-page__summary,
@@ -2596,6 +2761,92 @@ h4 {
 
   .confirmation-page__actions {
     flex-direction: column;
+  }
+}
+
+@media (max-width: 520px) {
+  .section {
+    padding: var(--space-xl) 0;
+  }
+
+  .hero {
+    min-height: 88svh;
+  }
+
+  .hero__eyebrow {
+    gap: var(--space-xs);
+    font-size: 0.66rem;
+  }
+
+  .hero__eyebrow::before {
+    width: 30px;
+  }
+
+  .hero__tagline {
+    font-size: clamp(1.65rem, 11vw, 2.35rem);
+  }
+
+  .hero__notes span {
+    font-size: 0.66rem;
+  }
+
+  .products-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .product-card__quick-add {
+    position: static;
+    opacity: 1;
+    transform: none;
+    background: var(--color-charcoal);
+  }
+
+  .product-card__quick-add-btn {
+    width: 100%;
+  }
+
+  .cart-drawer {
+    width: 100vw;
+    max-width: 100vw;
+  }
+
+  .cart-page__item {
+    grid-template-columns: 72px minmax(0, 1fr);
+    gap: var(--space-sm);
+  }
+
+  .cart-page__item-controls {
+    display: grid;
+    grid-template-columns: auto 1fr;
+  }
+
+  .cart-page__item-remove {
+    justify-self: start;
+  }
+
+  .ai-chat-button {
+    bottom: 12px;
+  }
+
+  .ai-chat-box {
+    right: 8px;
+    bottom: 68px;
+    width: calc(100vw - 16px);
+  }
+}
+
+@media (max-width: 380px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .nav__logo {
+    font-size: 1.15rem;
+    letter-spacing: 0.12em;
+  }
+
+  .hero__title {
+    font-size: clamp(2.65rem, 17vw, 3.6rem);
   }
 }
 

@@ -9,7 +9,7 @@
   var MAX_TEXT_LENGTH = 500;
 
   // Fallback local. En production, utilisez une propriété Apps Script ADMIN_PASSWORD.
-  var ADMIN_PASSWORD = '123456';
+  var ADMIN_PASSWORD = 'FlambeauAdmin2026!';
 
     // ---------- GET : récupérer les produits ----------
     function doGet(e) {

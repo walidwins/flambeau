@@ -197,7 +197,9 @@
         body: JSON.stringify(product)
       }).then(function(response) {
         return response.json().then(function(data) {
-          if (!response.ok) throw new Error(data.error || 'Produit refuse par le serveur');
+          if (!response.ok) {
+            throw new Error(data.details || data.message || data.error || 'Produit refuse par le serveur');
+          }
           return data;
         });
       });

@@ -684,6 +684,7 @@
     ];
 
     ensureSheetHeaders(sheet, headers);
+    repairLegacyOrderRows(sheet);
   }
 
   function ensureSheetHeaders(sheet, headers) {
@@ -695,6 +696,86 @@
 
     sheet.getRange(1, 1, 1, headers.length).setFontWeight('bold');
     sheet.setFrozenRows(1);
+  }
+
+  function repairLegacyOrderRows(sheet) {
+    var lastRow = sheet.getLastRow();
+    if (lastRow < 2) return;
+
+    var range = sheet.getRange(2, 1, lastRow - 1, 16);
+    var rows = range.getValues();
+    var changed = false;
+
+    rows.forEach(function(row) {
+      var adresse = String(row[8] || '').trim();
+      var articles = String(row[9] || '').trim();
+      var parfums = String(row[10] || '').trim();
+      var hasArticleTextInAddress = /(?:\bparfum\b|\bprix\b|\btotal\b| x\d+)/i.test(adresse);
+      var totalInParfums = parfums !== '' && !isNaN(Number(parfums));
+
+      if (!hasArticleTextInAddress || !totalInParfums) return;
+
+      var total = Number(parfums) || 0;
+      var parsed = parseLegacyArticlesCell(adresse, total);
+      row[8] = '';
+      row[9] = parsed.articles || adresse;
+      row[10] = articles;
+      row[11] = parsed.quantityTotal || '';
+      row[12] = parsed.subtotal || '';
+      row[13] = parsed.livraison || '';
+      row[14] = Number(parfums) || parfums;
+      changed = true;
+    });
+
+    if (changed) {
+      range.setValues(rows);
+      sheet.getRange(2, 10, lastRow - 1, 2).setWrap(true);
+    }
+  }
+
+  function parseLegacyArticlesCell(value, total) {
+    var text = String(value || '');
+    var segments = text.split(/\s*\|\s*|\n+/).map(function(segment) {
+      return String(segment || '').trim();
+    }).filter(function(segment) {
+      return segment;
+    });
+    var lines = [];
+    var currentLine = '';
+
+    segments.forEach(function(segment) {
+      if (/^(?:prix|total)\s*:/i.test(segment) && currentLine) {
+        currentLine += ' | ' + segment;
+        return;
+      }
+
+      if (currentLine) lines.push(currentLine);
+      currentLine = segment;
+    });
+
+    if (currentLine) lines.push(currentLine);
+
+    var quantityTotal = 0;
+    var subtotal = 0;
+    var livraison = '';
+
+    lines.forEach(function(line) {
+      var qtyMatch = line.match(/x\s*(\d+)/i);
+      var totalMatch = line.match(/Total\s*:\s*([0-9]+(?:[.,][0-9]+)?)/i);
+      if (qtyMatch) quantityTotal += Number(qtyMatch[1]) || 0;
+      if (totalMatch) subtotal += Number(String(totalMatch[1]).replace(',', '.')) || 0;
+    });
+
+    if (subtotal && total && total >= subtotal) {
+      livraison = total - subtotal;
+    }
+
+    return {
+      articles: lines.join('\n'),
+      quantityTotal: quantityTotal || '',
+      subtotal: subtotal || '',
+      livraison: livraison
+    };
   }
 
   function validateOrderInput(order) {
@@ -732,8 +813,12 @@
     var total = subtotal + livraison;
 
     var articlesSummary = items.map(function(item) {
-      return item.name + ' x' + item.qty;
-    }).join(' | ');
+      return item.name
+        + (item.fragrance ? ' - Parfum : ' + item.fragrance : '')
+        + ' x' + item.qty
+        + ' | Prix : ' + item.price + ' MAD'
+        + ' | Total : ' + item.lineTotal + ' MAD';
+    }).join('\n');
 
     var fragrancesSummary = items.map(function(item) {
       return item.fragrance ? item.name + ' : ' + item.fragrance : '';

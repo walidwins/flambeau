@@ -76,6 +76,8 @@ module.exports = async function handler(req, res) {
 
   try {
     if (req.method === 'GET') {
+      res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
+
       if (!scriptUrl) {
         return sendJson(res, 500, { error: 'GOOGLE_APPS_SCRIPT_URL manquante' });
       }

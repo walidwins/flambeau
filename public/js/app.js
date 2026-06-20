@@ -7,28 +7,23 @@
 var PRODUCTS = [];
 var DEFAULT_PRODUCT_IMAGE = 'imgs/aery-good-vibes-premium-scented-candle-packaging.jpg';
 var DEFAULT_FRAGRANCES = [
-  'Oud',
-  'Musc',
-  'Ambre',
-  'Vanille',
-  "Fleur d'oranger",
-  'Rose',
-  'Gardenia',
-  'Herbal',
-  'Magnolia précieuse',
-  'Fruits rouges',
-  'Lavande',
-  'Thé vert',
-  'Jasmin de damas',
-  'Chocolat noir',
-  'Cannelle orange',
-  'Citron',
-  'Caramel',
-  'Bois de oud',
-  'Orchidée',
-  'Khalij',
-  'Ylang ylang',
-  'Cerise'
+   'Gardenia',
+    'Herbal',
+    'Magnolia précieuse',
+    'Fruits rouges',
+    'Lavande',
+    'Rose',
+    'Thé vert',
+    'Jasmin de damas',
+    'Chocolat noir',
+    'Cannelle orange',
+    'Citron',
+    'Caramel',
+    'Bois de oud',
+    'Orchidée',
+    'Khalij',
+    'Ylang ylang',
+    'Cerise'
 ];
 var FRAGRANCE_CATEGORIES = ['fondants', 'bougies', 'bakhour', 'boukhour', 'poudre', 'poudre-parfumee'];
 var PRODUCT_USAGE_CATEGORIES = ['fondants', 'bougies', 'bakhour', 'boukhour', 'diffuseurs', 'poudre', 'poudre-parfumee'];
@@ -401,18 +396,27 @@ function initNav() {
   }
 
   if (toggle && menu) {
+    function closeMobileMenu() {
+      menu.classList.remove('nav__menu--open');
+      toggle.setAttribute('aria-expanded', 'false');
+      document.body.classList.remove('nav-open');
+    }
+
     toggle.addEventListener('click', function() {
-      var open = menu.classList.toggle('nav__menu--open');
-      toggle.setAttribute('aria-expanded', open);
+      var open = !menu.classList.contains('nav__menu--open');
+      menu.classList.toggle('nav__menu--open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
       document.body.classList.toggle('nav-open', open);
     });
-  }
+
     menu.querySelectorAll('a').forEach(function(link) {
-      link.addEventListener('click', function() {
-        menu.classList.remove('nav__menu--open');
-        toggle.setAttribute('aria-expanded', 'false');
-        document.body.classList.remove('nav-open');
-      });
+      link.addEventListener('click', closeMobileMenu);
+    });
+
+    window.addEventListener('resize', function() {
+      if (window.innerWidth > 768) {
+        closeMobileMenu();
+      }
     });
   }
 
@@ -427,6 +431,7 @@ function initNav() {
 
   cartDrawerEl = document.querySelector('.cart-drawer');
   renderCartDrawer();
+}
 
 // ---- HOME PAGE ----
 function initHome() {
@@ -639,7 +644,9 @@ function initProduct() {
         + '<li><strong>Réutilisation :</strong> Un même fondant peut être utilisé à plusieurs reprises, selon l\'intensité du parfum.</li>'
         + '<li><strong>Entretien :</strong> Lorsque le fondant ne diffuse plus d\'odeur, vous pouvez absorber la cire liquide avec un mouchoir. Si la cire est figée, placez le brûle-parfum au congélateur pendant 15 minutes : le bloc de cire se décollera facilement à l\'aide d\'une pointe de couteau ou d\'une cuillère.</li>'
         + '</ul>'
-        + '<h3 class="product-detail__usage-subtitle">Composition et engagement qualité</h3>'
+        + '</section><br/>'
+        + '<section class="product-detail__usage">'
+        + '<h3 class="product-detail__usage-title">Composition et engagement qualité</h3>'
         + '<p>Nos fondants sont le fruit d\'un travail artisanal réalisé avec soin au cœur de notre atelier à Oujda. Pour vous offrir une expérience olfactive saine et durable, nous avons sélectionné des matières premières rigoureuses :</p>'
         + '<ul class="product-detail__usage-list">'
         + '<li><strong>Cire de soja 100 % végétale :</strong> Sans OGM ni pesticides.</li>'

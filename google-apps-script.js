@@ -4,7 +4,7 @@
     // ============================================================
 
   var DEFAULT_SHEET_ID = '1SI8I4j0FSsUJKd44pHApttKW9F2wCp3jXNviBuJfQ8c';
-  var SHEET_ID = getConfiguredSheetId();
+  var SHEET_ID = DEFAULT_SHEET_ID;
   var NOTIF_EMAIL = 'flambeaushop@gmail.com';
   var MAX_ORDER_ITEMS = 50;
   var MAX_TEXT_LENGTH = 500;
@@ -17,6 +17,10 @@
       var action = e && e.parameter && e.parameter.action ? e.parameter.action : null;
 
       try {
+        if (action === 'debugConfig') {
+          return debugConfig();
+        }
+
         if (action === 'products' || action === 'Produits') {
           return getProducts();
         }
@@ -240,20 +244,86 @@
   }
 
   function getConfiguredSheetId() {
-    var propertyId = '';
+    var rawValue = '';
+    var source = 'default';
 
     try {
-      propertyId = PropertiesService.getScriptProperties().getProperty('SHEET_ID') || '';
+      var props = PropertiesService.getScriptProperties();
+      rawValue = props.getProperty('SHEET_ID')
+        || props.getProperty('GOOGLE_SHEET_ID')
+        || props.getProperty('SPREADSHEET_ID')
+        || '';
+      if (rawValue) source = 'script_property';
     } catch (err) {
-      propertyId = '';
+      rawValue = '';
     }
 
-    var sheetId = cleanConfigValue(propertyId) || cleanConfigValue(DEFAULT_SHEET_ID);
+    var sheetId = extractSheetId(rawValue) || extractSheetId(DEFAULT_SHEET_ID);
     return sheetId === 'TON_GOOGLE_SHEET_ID_ICI' ? '' : sheetId;
+  }
+
+  function getConfiguredSheetIdSource() {
+    try {
+      var props = PropertiesService.getScriptProperties();
+      if (props.getProperty('SHEET_ID')) return 'SHEET_ID';
+      if (props.getProperty('GOOGLE_SHEET_ID')) return 'GOOGLE_SHEET_ID';
+      if (props.getProperty('SPREADSHEET_ID')) return 'SPREADSHEET_ID';
+    } catch (err) {}
+
+    return 'DEFAULT_SHEET_ID';
+  }
+
+  function extractSheetId(value) {
+    var text = cleanConfigValue(value);
+    if (!text) return '';
+
+    text = text.replace(/^["']|["']$/g, '').trim();
+
+    if (text.indexOf('=') !== -1 && /^SHEET_ID\s*=/i.test(text)) {
+      text = text.split('=').slice(1).join('=').trim();
+    }
+
+    var urlMatch = text.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+    if (urlMatch) return urlMatch[1];
+
+    var idMatch = text.match(/[a-zA-Z0-9-_]{20,}/);
+    return idMatch ? idMatch[0] : '';
   }
 
   function cleanConfigValue(value) {
     return String(value || '').trim();
+  }
+
+  function debugConfig() {
+    var sheetId = getConfiguredSheetId();
+    var payload = {
+      status: sheetId ? 'ok' : 'error',
+      sheetIdConfigured: Boolean(sheetId),
+      sheetIdSource: getConfiguredSheetIdSource(),
+      sheetIdPreview: sheetId ? sheetId.slice(0, 6) + '...' + sheetId.slice(-6) : '',
+      spreadsheetOpen: false,
+      message: ''
+    };
+
+    if (!sheetId) {
+      payload.message = 'SHEET_ID absent. Ajoute SHEET_ID dans Apps Script > Project Settings > Script properties.';
+      return ContentService
+        .createTextOutput(JSON.stringify(payload))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    try {
+      SpreadsheetApp.openById(sheetId);
+      payload.spreadsheetOpen = true;
+      payload.message = 'Google Sheet accessible.';
+    } catch (err) {
+      payload.status = 'error';
+      payload.message = 'SHEET_ID trouve mais impossible ouvrir la feuille: ' + err.message;
+    }
+
+    return ContentService
+      .createTextOutput(JSON.stringify(payload))
+      .setMimeType(ContentService.MimeType.JSON);
   }
 
   function cleanupWorkbookSheets(ss) {

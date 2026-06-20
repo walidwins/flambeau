@@ -1,9 +1,11 @@
 const PRODUCTS_ACTION = 'products';
 const ADD_PRODUCT_ACTION = 'addProduct';
 const UPDATE_PRODUCT_ACTION = 'updateProduct';
+const { applySecurityHeaders, rejectUnsafeRequest } = require('./_security');
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
+  applySecurityHeaders(res);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
   res.end(JSON.stringify(payload));
 }
@@ -75,6 +77,18 @@ module.exports = async function handler(req, res) {
   const scriptUrl = process.env.GOOGLE_APPS_SCRIPT_URL;
 
   try {
+    if (rejectUnsafeRequest(req, res, {
+      methods: ['GET', 'POST', 'PUT'],
+      maxBodyBytes: 64 * 1024,
+      rateLimit: {
+        scope: `products:${req.method}`,
+        limit: req.method === 'GET' ? 120 : 20,
+        windowMs: 60_000
+      }
+    })) {
+      return;
+    }
+
     if (req.method === 'GET') {
       res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=300');
 
@@ -132,7 +146,6 @@ module.exports = async function handler(req, res) {
       return sendJson(res, 200, data);
     }
 
-    res.setHeader('Allow', 'GET, POST, PUT');
     return sendJson(res, 405, { error: 'Methode non autorisee' });
   } catch (error) {
     return sendJson(res, 500, {

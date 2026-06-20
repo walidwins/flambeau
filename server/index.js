@@ -237,6 +237,20 @@ function cleanCategory(value) {
   return allowed.includes(category) ? category : 'bougies';
 }
 
+function normalizeCityName(value) {
+  return cleanText(value, 120)
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function getDeliveryFee(city, subtotal) {
+  if (cleanNumber(subtotal, 0, 1000000) >= 500) return 0;
+  return normalizeCityName(city) === 'oujda' ? 15 : 30;
+}
+
 function validateProduct(input) {
   const labels = {
     fondants: 'Fondants',
@@ -283,6 +297,10 @@ function validateOrder(input) {
     qty: cleanNumber(item.qty || item.quantity, 1, 1000)
   }));
 
+  const subtotal = items.reduce((sum, item) => sum + item.price * item.qty, 0);
+  const city = cleanText(input.ville || input.city, 120);
+  const shipping = getDeliveryFee(city, subtotal);
+
   return {
     id: `ORD-${Date.now().toString(36).toUpperCase()}`,
     orderNum: cleanText(input.orderNum, 80) || `FLB-${Date.now().toString(36).toUpperCase()}`,
@@ -291,12 +309,14 @@ function validateOrder(input) {
       firstName: cleanText(input.prenom || input.firstName, 120),
       lastName: cleanText(input.nom || input.lastName, 120),
       phone: cleanText(input.telephone || input.phone, 40),
-      city: cleanText(input.ville || input.city, 120),
+      city,
       postalCode: cleanText(input.codePostal || input.postalCode, 40),
       address: cleanText(input.adresse || input.address, 250)
     },
     items,
-    total: cleanNumber(input.total, 0, 1000000),
+    subtotal,
+    livraison: shipping,
+    total: subtotal + shipping,
     status: 'new'
   };
 }
@@ -508,6 +528,8 @@ async function sendOrderToAppsScript(order) {
     codePostal: order.customer.postalCode,
     adresse: order.customer.address,
     items: order.items,
+    subtotal: order.subtotal,
+    livraison: order.livraison,
     total: order.total
   };
 

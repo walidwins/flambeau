@@ -1,9 +1,12 @@
 const HF_CHAT_COMPLETIONS_URL = 'https://router.huggingface.co/v1/chat/completions';
 const DEFAULT_HF_MODEL = 'meta-llama/Llama-3.1-8B-Instruct';
+const { applySecurityHeaders, rejectUnsafeRequest } = require('./_security');
 
 function sendJson(res, statusCode, payload) {
   res.statusCode = statusCode;
+  applySecurityHeaders(res);
   res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store');
   res.end(JSON.stringify(payload));
 }
 
@@ -24,9 +27,16 @@ function parseBody(body) {
 }
 
 module.exports = async function chatHandler(req, res) {
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST');
-    return sendJson(res, 405, { error: 'Methode non autorisee. Utilisez POST.' });
+  if (rejectUnsafeRequest(req, res, {
+    methods: ['POST'],
+    maxBodyBytes: 12 * 1024,
+    rateLimit: {
+      scope: 'chat',
+      limit: 20,
+      windowMs: 60_000
+    }
+  })) {
+    return;
   }
 
   const hfToken = process.env.HF_TOKEN;
@@ -43,6 +53,10 @@ module.exports = async function chatHandler(req, res) {
 
   if (!message) {
     return sendJson(res, 400, { error: 'Le message est obligatoire.' });
+  }
+
+  if (message.length > 1500) {
+    return sendJson(res, 413, { error: 'Le message est trop long.' });
   }
 
   const controller = new AbortController();

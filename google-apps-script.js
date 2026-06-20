@@ -1,5 +1,5 @@
-    // ============================================================
-    // FLAMBEAU — Google Apps Script
+﻿    // ============================================================
+    // FLAMBEAU â€” Google Apps Script
     // Produits + commandes Sheet/email + contact email
     // ============================================================
 
@@ -8,10 +8,10 @@
   var MAX_ORDER_ITEMS = 50;
   var MAX_TEXT_LENGTH = 500;
 
-  // Fallback local. En production, utilisez une propriété Apps Script ADMIN_PASSWORD.
+  // Fallback local. En production, utilisez une propriÃ©tÃ© Apps Script ADMIN_PASSWORD.
   var ADMIN_PASSWORD = 'FlambeauAdmin2026!';
 
-    // ---------- GET : récupérer les produits ----------
+    // ---------- GET : rÃ©cupÃ©rer les produits ----------
     function doGet(e) {
       var action = e && e.parameter && e.parameter.action ? e.parameter.action : null;
 
@@ -35,7 +35,7 @@
     try {
         if (!e || !e.postData || !e.postData.contents) {
           return ContentService
-            .createTextOutput(JSON.stringify({ status: 'error', message: 'Données POST manquantes' }))
+            .createTextOutput(JSON.stringify({ status: 'error', message: 'DonnÃ©es POST manquantes' }))
             .setMimeType(ContentService.MimeType.JSON);
         }
 
@@ -149,7 +149,7 @@
 
         product.id = product.id || product.ID || product.Id || '';
         product.name = product.name || product.nom || product.Nom || '';
-        product.category = product.category || product.categorie || product.catégorie || product.Category || 'bougies';
+        product.category = product.category || product.categorie || product['catÃ©gorie'] || product.Category || 'bougies';
         product.categoryLabel = product.categoryLabel || product.CategoryLabel || product.category || 'Bougies';
         product.description = product.description || product.Description || '';
         product.notes = product.notes || product.Notes || '';
@@ -214,7 +214,9 @@
       }
 
       try {
-        return SpreadsheetApp.openById(SHEET_ID);
+        var ss = SpreadsheetApp.openById(SHEET_ID);
+        cleanupWorkbookSheets(ss);
+        return ss;
       } catch (err) {
         return null;
       }
@@ -226,10 +228,36 @@
     }
 
     try {
-      return SpreadsheetApp.openById(SHEET_ID);
+      var ss = SpreadsheetApp.openById(SHEET_ID);
+      cleanupWorkbookSheets(ss);
+      return ss;
     } catch (err) {
       throw new Error('Impossible ouvrir Google Sheet ' + SHEET_ID + ': ' + err.message);
     }
+  }
+
+  function cleanupWorkbookSheets(ss) {
+    var allowed = {
+      Produits: true,
+      Commandes: true
+    };
+
+    var produitsSheet = ss.getSheetByName('Produits') || ss.insertSheet('Produits');
+    var commandesSheet = ss.getSheetByName('Commandes') || ss.insertSheet('Commandes');
+
+    ensureProductSheetHeaders(produitsSheet);
+    ensureOrderSheetHeaders(commandesSheet);
+
+    ss.getSheets().forEach(function(sheet) {
+      if (!allowed[sheet.getName()]) {
+        try {
+          ss.deleteSheet(sheet);
+          Logger.log('Deleted extra sheet: ' + sheet.getName());
+        } catch (err) {
+          Logger.log('Could not delete extra sheet ' + sheet.getName() + ': ' + err.message);
+        }
+      }
+    });
   }
 
   function addProduct(data) {
@@ -242,7 +270,7 @@
       var ss = getSpreadsheet();
       if (!ss) {
         return ContentService
-          .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configuré' }))
+          .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configurÃ©' }))
           .setMimeType(ContentService.MimeType.JSON);
       }
 
@@ -290,7 +318,7 @@
     var ss = getSpreadsheet();
     if (!ss) {
       return ContentService
-        .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configurÃ©' }))
+        .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configurÃƒÂ©' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 
@@ -329,22 +357,123 @@
   }
 
   function ensureProductSheetHeaders(sheet) {
+    var headers = [
+      'id',
+      'name',
+      'category',
+      'categoryLabel',
+      'price',
+      'description',
+      'notes',
+      'fragrances',
+      'weight',
+      'stock',
+      'image',
+      'inStock'
+    ];
+
     if (sheet.getLastRow() === 0) {
-      sheet.appendRow([
-        'id',
-        'name',
-        'category',
-        'categoryLabel',
-        'price',
-        'description',
-        'notes',
-        'fragrances',
-        'weight',
-        'stock',
-        'image',
-        'inStock'
-      ]);
+      sheet.appendRow(headers);
+    } else {
+      var firstRow = sheet.getRange(1, 1, 1, headers.length).getValues()[0];
+      var hasHeader = firstRow.some(function(value) {
+        return String(value || '').trim();
+      });
+
+      if (!hasHeader) {
+        sheet.getRange(1, 1, 1, headers.length).setValues([headers]);
+      }
     }
+
+    formatProductSheet(sheet, headers.length);
+  }
+
+  function formatProductSheet(sheet, columnCount) {
+    var lastRow = Math.max(sheet.getLastRow(), 1);
+    var dataRows = Math.max(sheet.getMaxRows() - 1, 1);
+
+    sheet.setFrozenRows(1);
+    sheet.setFrozenColumns(2);
+
+    sheet.getRange(1, 1, 1, columnCount)
+      .setBackground('#2c211a')
+      .setFontColor('#fff7e6')
+      .setFontWeight('bold')
+      .setHorizontalAlignment('center')
+      .setVerticalAlignment('middle');
+
+    sheet.setRowHeight(1, 34);
+
+    var widths = [130, 190, 130, 150, 90, 330, 220, 300, 100, 90, 330, 110];
+    widths.forEach(function(width, index) {
+      sheet.setColumnWidth(index + 1, width);
+    });
+
+    sheet.getRange(1, 1, lastRow, columnCount)
+      .setVerticalAlignment('middle');
+
+    sheet.getRange(2, 1, dataRows, columnCount)
+      .setFontColor('#2d2d2d');
+
+    sheet.getRange(2, 5, dataRows, 1)
+      .setNumberFormat('0.00');
+
+    sheet.getRange(2, 10, dataRows, 1)
+      .setNumberFormat('0');
+
+    sheet.getRange(2, 6, dataRows, 4)
+      .setWrap(true);
+
+    sheet.getRange(2, 11, dataRows, 1)
+      .setWrap(true);
+
+    sheet.getRange(2, 5, dataRows, 1)
+      .setHorizontalAlignment('right');
+
+    sheet.getRange(2, 10, dataRows, 1)
+      .setHorizontalAlignment('center');
+
+    sheet.getRange(2, 12, dataRows, 1)
+      .setHorizontalAlignment('center');
+
+    applyProductValidations(sheet, dataRows);
+    applyProductFilter(sheet, lastRow, columnCount);
+  }
+
+  function applyProductValidations(sheet, dataRows) {
+    var categoryRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(['fondants', 'bougies', 'bakhour', 'diffuseurs', 'poudre-parfumee'], true)
+      .setAllowInvalid(false)
+      .build();
+
+    var inStockRule = SpreadsheetApp.newDataValidation()
+      .requireValueInList(['TRUE', 'FALSE'], true)
+      .setAllowInvalid(false)
+      .build();
+
+    sheet.getRange(2, 3, dataRows, 1).setDataValidation(categoryRule);
+    sheet.getRange(2, 12, dataRows, 1).setDataValidation(inStockRule);
+  }
+
+  function applyProductFilter(sheet, lastRow, columnCount) {
+    var filter = sheet.getFilter();
+    var wantedRange = sheet.getRange(1, 1, lastRow, columnCount);
+
+    if (filter) {
+      var filterRange = filter.getRange();
+      if (
+        filterRange.getRow() === 1 &&
+        filterRange.getColumn() === 1 &&
+        filterRange.getNumRows() === lastRow &&
+        filterRange.getNumColumns() === columnCount
+      ) {
+        return;
+      }
+
+      filter.remove();
+    }
+
+    wantedRange.createFilter();
   }
 
   function findHeaderIndex(headers, names) {
@@ -395,7 +524,7 @@
   function findProductRowByIdOrIdentity(values, headers, headerRowIndex, id, cleanProduct) {
     var idCol = findHeaderIndex(headers, ['id', 'ID', 'Id']);
     var nameCol = findHeaderIndex(headers, ['name', 'nom', 'Nom', 'Name']);
-    var categoryCol = findHeaderIndex(headers, ['category', 'categorie', 'catÃ©gorie', 'Category']);
+    var categoryCol = findHeaderIndex(headers, ['category', 'categorie', 'catÃƒÂ©gorie', 'Category']);
     var wantedKey = productIdentityKey(cleanProduct.category, cleanProduct.name);
 
     for (var i = headerRowIndex + 1; i < values.length; i++) {
@@ -429,7 +558,7 @@
       nom: 'name',
       category: 'category',
       categorie: 'category',
-      'catÃ©gorie': 'category',
+      'catÃƒÂ©gorie': 'category',
       categorylabel: 'categoryLabel',
       price: 'price',
       prix: 'price',
@@ -464,7 +593,7 @@
       bougies: 'Bougies',
       bakhour: 'Bakhour',
       diffuseurs: 'Diffuseurs',
-      'poudre-parfumee': 'Poudre parfumée'
+      'poudre-parfumee': 'Poudre parfumÃ©e'
     };
 
     var category = cleanCategory(data.category);
@@ -502,38 +631,33 @@
     lock.waitLock(10000);
 
     try {
-      var sheet = ss.getSheetByName('Commandes') || ss.insertSheet('Commandes');
-      ensureOrderSheetHeaders(sheet);
+      var commandesSheet = ss.getSheetByName('Commandes') || ss.insertSheet('Commandes');
+      ensureOrderSheetHeaders(commandesSheet);
 
-      var itemsStr = cleanOrder.items.map(function(i) {
-        return formatOrderItemForSheet(i);
-      }).join('\n');
-
-      var parfumsStr = cleanOrder.items.map(function(i) {
-        return i.fragrance ? i.name + ' : ' + i.fragrance : '';
-      }).filter(function(value) {
-        return value;
-      }).join('\n');
-
-      sheet.appendRow([
+      commandesSheet.appendRow([
         cleanOrder.orderNum,
         cleanOrder.date,
+        cleanOrder.heure,
+        cleanOrder.status,
         cleanOrder.prenom,
         cleanOrder.nom,
         cleanOrder.telephone,
         cleanOrder.ville,
-        cleanOrder.codePostal,
         cleanOrder.adresse,
-        itemsStr,
-        parfumsStr,
-        cleanOrder.total
+        cleanOrder.articlesSummary,
+        cleanOrder.fragrancesSummary,
+        cleanOrder.quantityTotal,
+        cleanOrder.subtotal,
+        cleanOrder.livraison,
+        cleanOrder.total,
+        cleanOrder.notes
       ]);
 
       SpreadsheetApp.flush();
-      var lastRow = sheet.getLastRow();
-      sheet.getRange(lastRow, 9, 1, 2).setWrap(true);
-      sheet.autoResizeColumns(1, 11);
-      return 'saved: Commandes row ' + lastRow;
+      var commandesLastRow = commandesSheet.getLastRow();
+      commandesSheet.getRange(commandesLastRow, 10, 1, 2).setWrap(true);
+      commandesSheet.autoResizeColumns(1, 16);
+      return 'saved: Commandes row ' + commandesLastRow;
     } finally {
       lock.releaseLock();
     }
@@ -543,17 +667,26 @@
     var headers = [
       'N° Commande',
       'Date',
+      'Heure',
+      'Statut',
       'Prénom',
       'Nom',
       'Téléphone',
       'Ville',
-      'Code Postal',
       'Adresse',
-      'Articles détaillés',
+      'Articles',
       'Parfums',
-      'Total'
+      'Quantité totale',
+      'Sous-total',
+      'Livraison',
+      'Total',
+      'Notes'
     ];
 
+    ensureSheetHeaders(sheet, headers);
+  }
+
+  function ensureSheetHeaders(sheet, headers) {
     if (sheet.getLastRow() === 0) {
       sheet.appendRow(headers);
     } else {
@@ -564,39 +697,69 @@
     sheet.setFrozenRows(1);
   }
 
-  function formatOrderItemForSheet(item) {
-    var total = cleanNumber(item.price, 0, 100000) * cleanNumber(item.qty, 1, 1000);
-    return item.name
-      + (item.fragrance ? ' - Parfum : ' + item.fragrance : '')
-      + ' x' + item.qty
-      + ' | Prix : ' + formatPrice(item.price) + ' MAD'
-      + ' | Total : ' + formatPrice(total) + ' MAD';
-  }
   function validateOrderInput(order) {
     if (!order || !Array.isArray(order.items) || order.items.length === 0) {
       throw new Error('Commande vide');
     }
 
+    var now = new Date();
+    var date = Utilities.formatDate(now, 'Africa/Casablanca', 'dd/MM/yyyy');
+    var heure = Utilities.formatDate(now, 'Africa/Casablanca', 'HH:mm');
+
     var items = order.items.slice(0, MAX_ORDER_ITEMS).map(function(item) {
+      var qty = cleanNumber(item.quantity || item.qty, 1, 1000);
+      var price = cleanNumber(item.price, 0, 100000);
       return {
         name: cleanText(item.name, 120) || 'Produit',
         fragrance: cleanText(item.fragrance || item.parfum, 120),
-        price: cleanNumber(item.price, 0, 100000),
-        qty: cleanNumber(item.qty, 1, 1000)
+        price: price,
+        qty: qty,
+        lineTotal: qty * price
       };
     });
 
+    var quantityTotal = items.reduce(function(total, item) {
+      return total + item.qty;
+    }, 0);
+
+    var subtotal = order.subtotal != null
+      ? cleanNumber(order.subtotal, 0, 1000000)
+      : items.reduce(function(total, item) {
+          return total + item.lineTotal;
+        }, 0);
+
+    var livraison = getDeliveryFee(order.ville || order.city, subtotal);
+    var total = subtotal + livraison;
+
+    var articlesSummary = items.map(function(item) {
+      return item.name + ' x' + item.qty;
+    }).join(' | ');
+
+    var fragrancesSummary = items.map(function(item) {
+      return item.fragrance ? item.name + ' : ' + item.fragrance : '';
+    }).filter(function(value) {
+      return value;
+    }).join(' | ');
+
     return {
       orderNum: cleanText(order.orderNum, 80) || ('FLB-' + Date.now()),
-      date: cleanText(order.date, 80) || new Date().toLocaleString('fr-FR'),
-      prenom: cleanText(order.prenom, 120),
-      nom: cleanText(order.nom, 120),
-      telephone: cleanText(order.telephone, 40),
-      ville: cleanText(order.ville, 120),
-      codePostal: cleanText(order.codePostal, 40),
-      adresse: cleanText(order.adresse, 200),
+      date: date,
+      heure: heure,
+      status: cleanText(order.status || order.statut, 80) || 'Nouvelle',
+      prenom: cleanText(order.prenom || order.firstName, 120),
+      nom: cleanText(order.nom || order.lastName, 120),
+      telephone: cleanText(order.telephone || order.phone, 40),
+      ville: cleanText(order.ville || order.city, 120),
+      codePostal: cleanText(order.codePostal || order.postalCode, 40),
+      adresse: cleanText(order.adresse || order.address, 200),
       items: items,
-      total: cleanNumber(order.total, 0, 1000000)
+      articlesSummary: articlesSummary,
+      fragrancesSummary: fragrancesSummary,
+      quantityTotal: quantityTotal,
+      subtotal: subtotal,
+      livraison: livraison,
+      total: total,
+      notes: cleanText(order.notes || order.note || order.commentaire, 300)
     };
   }
 
@@ -604,12 +767,12 @@
   function sendEmailNotification(order) {
     var cleanOrder = validateOrderInput(order);
     var itemsText = cleanOrder.items.map(function(i) {
-      return i.name + (i.fragrance ? ' - Parfum : ' + i.fragrance : '') + ' ×' + i.qty + ' = ' + (i.price * i.qty) + ' MAD';
+      return i.name + (i.fragrance ? ' - Parfum : ' + i.fragrance : '') + ' Ã—' + i.qty + ' = ' + (i.price * i.qty) + ' MAD';
     }).join('\n');
 
     if (!NOTIF_EMAIL) return;
 
-    var subject = 'Nouvelle commande Flambeau — ' + (cleanOrder.orderNum || 'N/A');
+    var subject = 'Nouvelle commande Flambeau â€” ' + (cleanOrder.orderNum || 'N/A');
     var plainBody = 'Nouvelle commande : ' + (cleanOrder.orderNum || '') + '\n' + itemsText + '\n\nTotal : ' + (cleanOrder.total || 0);
 
     // Build HTML email similar to confirmation page
@@ -633,7 +796,7 @@
             '<td style="vertical-align:top;padding:6px 8px;color:#666;width:45%">' +
               '<div style="margin-bottom:8px"><strong style="display:block;color:#444">Date</strong>' + escapeHtml(cleanOrder.date) + '</div>' +
               '<div style="margin-bottom:8px"><strong style="display:block;color:#444">Client</strong>' + escapeHtml((cleanOrder.prenom || '') + ' ' + (cleanOrder.nom || '')) + '</div>' +
-              '<div style="margin-bottom:8px"><strong style="display:block;color:#444">Téléphone</strong>' + escapeHtml(cleanOrder.telephone || '') + '</div>' +
+              '<div style="margin-bottom:8px"><strong style="display:block;color:#444">TÃ©lÃ©phone</strong>' + escapeHtml(cleanOrder.telephone || '') + '</div>' +
               '<div style="margin-bottom:8px"><strong style="display:block;color:#444">Adresse</strong>' + escapeHtml((cleanOrder.adresse || '') + (cleanOrder.codePostal ? ', ' + escapeHtml(cleanOrder.codePostal) : '') + (cleanOrder.ville ? ', ' + escapeHtml(cleanOrder.ville) : '')) + '</div>' +
             '</td>' +
             '<td style="vertical-align:top;padding:6px 8px;width:55%">' +
@@ -641,7 +804,7 @@
                 '<thead>' +
                   '<tr style="background:#333;color:#fff">' +
                     '<th style="text-align:left;padding:10px 12px;font-weight:600">Produit</th>' +
-                    '<th style="text-align:center;padding:10px 12px;font-weight:600">Qté</th>' +
+                    '<th style="text-align:center;padding:10px 12px;font-weight:600">QtÃ©</th>' +
                     '<th style="text-align:right;padding:10px 12px;font-weight:600">Prix</th>' +
                   '</tr>' +
                 '</thead>' +
@@ -652,7 +815,7 @@
           '</tr>' +
         '</table>' +
       '</div>' +
-      '<div style="text-align:center;color:#999;font-size:12px;margin-top:18px;padding-top:12px;border-top:1px solid #f0f0f0">Flambeau · Boutique en ligne · 2026</div>' +
+      '<div style="text-align:center;color:#999;font-size:12px;margin-top:18px;padding-top:12px;border-top:1px solid #f0f0f0">Flambeau Â· Boutique en ligne Â· 2026</div>' +
     '</div>';
 
     // Try MailApp first (supports htmlBody), then GmailApp, and always log result
@@ -663,32 +826,16 @@
         htmlBody: htmlBody,
         body: plainBody
       });
-      logEmailStatus(cleanOrder, 'sent_html_mailapp', null);
+      Logger.log('Email status: sent_html_mailapp - ' + cleanOrder.orderNum);
     } catch (errMail) {
       try {
         GmailApp.sendEmail(NOTIF_EMAIL, subject, plainBody, { htmlBody: htmlBody });
-        logEmailStatus(cleanOrder, 'sent_html_gmail_fallback', errMail.message);
+        Logger.log('Email status: sent_html_gmail_fallback - ' + cleanOrder.orderNum + ' - fallback reason: ' + errMail.message);
       } catch (errGmail) {
-        logEmailStatus(cleanOrder, 'failed', (errGmail.message || errMail.message));
+        Logger.log('Email status: failed - ' + cleanOrder.orderNum + ' - ' + (errGmail.message || errMail.message));
         Logger.log('Email sending failed: ' + (errGmail.message || errMail.message));
         throw new Error(errGmail.message || errMail.message);
       }
-    }
-  }
-
-  function logEmailStatus(order, status, errorMessage) {
-    var ss = getSpreadsheet();
-    var now = new Date();
-    var row = [now.toISOString(), order.orderNum || '', status, errorMessage || ''];
-
-    if (ss) {
-      var sheet = ss.getSheetByName('EmailLogs') || ss.insertSheet('EmailLogs');
-      if (sheet.getLastRow() === 0) {
-        sheet.appendRow(['Timestamp', 'OrderNum', 'Status', 'Error']);
-      }
-      sheet.appendRow(row);
-    } else {
-      Logger.log('EmailLog: ' + JSON.stringify(row));
     }
   }
 
@@ -729,6 +876,20 @@
     return allowed.indexOf(category) === -1 ? 'bougies' : category;
   }
 
+  function normalizeCityName(value) {
+    return cleanText(value, 120)
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/\s+/g, ' ')
+      .trim()
+      .toLowerCase();
+  }
+
+  function getDeliveryFee(city, subtotal) {
+    if (cleanNumber(subtotal, 0, 1000000) >= 500) return 0;
+    return normalizeCityName(city) === 'oujda' ? 15 : 30;
+  }
+
   function cleanImage(value) {
     var image = cleanText(value, 300);
     if (/^imgs\/[-a-zA-Z0-9_./]+$/.test(image)) return image;
@@ -737,7 +898,7 @@
   }
 
   // ---------- TEST / DEBUG ----------
-  // Exécuter `testSendEmail()` depuis l'éditeur Apps Script pour forcer l'envoi
+  // ExÃ©cuter `testSendEmail()` depuis l'Ã©diteur Apps Script pour forcer l'envoi
   function testSendEmail() {
     var order = {
       orderNum: 'TEST-' + Date.now(),
@@ -801,11 +962,11 @@
 
     if (!NOTIF_EMAIL) return;
 
-    var subject = 'Nouveau message Flambeau — ' + cleanContact.sujet;
+    var subject = 'Nouveau message Flambeau â€” ' + cleanContact.sujet;
     var plainBody = 'De : ' + cleanContact.prenom + ' ' + cleanContact.nom + ' (' + cleanContact.email + ')' +
       '\nSujet : ' + cleanContact.sujet +
       '\n\nMessage :\n' + cleanContact.message +
-      (cleanContact.telephone ? '\n\nTéléphone : ' + cleanContact.telephone : '');
+      (cleanContact.telephone ? '\n\nTÃ©lÃ©phone : ' + cleanContact.telephone : '');
 
     var htmlBody = '<div style="font-family:Georgia, Times New Roman, serif; color:#222; max-width:680px; margin:0 auto; padding:20px; background:#fff">' +
       '<div style="text-align:center; padding-bottom:12px">' +
@@ -824,7 +985,7 @@
             '<td style="padding:8px;border-bottom:1px solid #eee">' + escapeHtml(cleanContact.email) + '</td>' +
           '</tr>' +
           (cleanContact.telephone ? '<tr>' +
-            '<td style="padding:8px;border-bottom:1px solid #eee"><strong>Téléphone :</strong></td>' +
+            '<td style="padding:8px;border-bottom:1px solid #eee"><strong>TÃ©lÃ©phone :</strong></td>' +
             '<td style="padding:8px;border-bottom:1px solid #eee">' + escapeHtml(cleanContact.telephone) + '</td>' +
           '</tr>' : '') +
           '<tr>' +
@@ -836,7 +997,7 @@
           '<p style="margin:0;white-space:pre-wrap;line-height:1.6">' + escapeHtml(cleanContact.message) + '</p>' +
         '</div>' +
       '</div>' +
-      '<div style="text-align:center;color:#999;font-size:12px;margin-top:18px;padding-top:12px;border-top:1px solid #f0f0f0">Flambeau · Boutique en ligne · 2026</div>' +
+      '<div style="text-align:center;color:#999;font-size:12px;margin-top:18px;padding-top:12px;border-top:1px solid #f0f0f0">Flambeau Â· Boutique en ligne Â· 2026</div>' +
     '</div>';
 
     try {

@@ -259,6 +259,21 @@ function getCartTotal(cart) {
     return total + (p ? p.price * item.quantity : 0);
   }, 0);
 }
+
+function normalizeCityName(value) {
+  return String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+}
+
+function getDeliveryFee(city, subtotal) {
+  if (Number(subtotal || 0) >= 500) return 0;
+  return normalizeCityName(city) === 'oujda' ? 15 : 30;
+}
+
 function getCartItemCount(cart) {
   return cart.items.reduce(function(n, i){ return n + i.quantity; }, 0);
 }
@@ -822,14 +837,15 @@ function renderCartPage() {
 
   // Totals
   var subtotal = getCartTotal(cart);
-  var shipping = subtotal > 50 ? 0 : 5.90;
+  var cityInput = document.getElementById('ville');
+  var shipping = getDeliveryFee(cityInput ? cityInput.value : '', subtotal);
   var total = subtotal + shipping;
 
   var subEl = document.querySelector('.cart-page__subtotal .text-price');
   var shipEl = document.querySelector('.cart-page__shipping .text-price');
   var totEl = document.querySelector('.cart-page__total .text-price');
   if (subEl) subEl.textContent = formatPrice(subtotal);
-  if (shipEl) shipEl.textContent = shipping === 0 ? 'Gratuit' : formatPrice(shipping);
+  if (shipEl) shipEl.textContent = formatPrice(shipping);
   if (totEl) totEl.textContent = formatPrice(total);
 }
 
@@ -861,6 +877,12 @@ function initCart() {
   renderCartPage();
   var form = document.getElementById('orderForm');
   if (form) {
+    var cityInput = document.getElementById('ville');
+    if (cityInput) {
+      cityInput.addEventListener('input', renderCartPage);
+      cityInput.addEventListener('change', renderCartPage);
+    }
+
     form.addEventListener('submit', function(e) {
       e.preventDefault();
 
@@ -884,7 +906,9 @@ function initCart() {
         var p = getProductById(item.productId);
         return { productId: item.productId, name: p ? p.name : 'Produit', fragrance: getItemFragrance(item), price: p ? p.price : 0, qty: item.quantity };
       });
-      var orderTotal = getCartTotal(cart);
+      var orderSubtotal = getCartTotal(cart);
+      var orderShipping = getDeliveryFee(ville, orderSubtotal);
+      var orderTotal = orderSubtotal + orderShipping;
 
       // Données complètes de la commande
       var orderData = {
@@ -898,6 +922,10 @@ function initCart() {
         codePostal: codePostal,
         adresse: adresse,
         items: orderItems,
+        subtotal: orderSubtotal,
+        livraison: orderShipping,
+        delivery: orderShipping,
+        shipping: orderShipping,
         total: orderTotal
       };
 

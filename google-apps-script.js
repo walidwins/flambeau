@@ -3,7 +3,8 @@
     // Produits + commandes Sheet/email + contact email
     // ============================================================
 
-  var SHEET_ID = '1SI8I4j0FSsUJKd44pHApttKW9F2wCp3jXNviBuJfQ8c';
+  var DEFAULT_SHEET_ID = '1SI8I4j0FSsUJKd44pHApttKW9F2wCp3jXNviBuJfQ8c';
+  var SHEET_ID = getConfiguredSheetId();
   var NOTIF_EMAIL = 'flambeaushop@gmail.com';
   var MAX_ORDER_ITEMS = 50;
   var MAX_TEXT_LENGTH = 500;
@@ -209,12 +210,13 @@
 
     // Utility: return Spreadsheet or null with helpful check
     function getSpreadsheet() {
-      if (!SHEET_ID || SHEET_ID === 'TON_GOOGLE_SHEET_ID_ICI') {
+      var sheetId = getConfiguredSheetId();
+      if (!sheetId) {
         return null;
       }
 
       try {
-        var ss = SpreadsheetApp.openById(SHEET_ID);
+        var ss = SpreadsheetApp.openById(sheetId);
         cleanupWorkbookSheets(ss);
         return ss;
       } catch (err) {
@@ -223,17 +225,35 @@
     }
 
   function openSpreadsheetOrThrow() {
-    if (!SHEET_ID || SHEET_ID === 'TON_GOOGLE_SHEET_ID_ICI') {
-      throw new Error('SHEET_ID non configure');
+    var sheetId = getConfiguredSheetId();
+    if (!sheetId) {
+      throw new Error('SHEET_ID non configure dans Google Apps Script');
     }
 
     try {
-      var ss = SpreadsheetApp.openById(SHEET_ID);
+      var ss = SpreadsheetApp.openById(sheetId);
       cleanupWorkbookSheets(ss);
       return ss;
     } catch (err) {
-      throw new Error('Impossible ouvrir Google Sheet ' + SHEET_ID + ': ' + err.message);
+      throw new Error('Impossible ouvrir Google Sheet ' + sheetId + ': ' + err.message);
     }
+  }
+
+  function getConfiguredSheetId() {
+    var propertyId = '';
+
+    try {
+      propertyId = PropertiesService.getScriptProperties().getProperty('SHEET_ID') || '';
+    } catch (err) {
+      propertyId = '';
+    }
+
+    var sheetId = cleanConfigValue(propertyId) || cleanConfigValue(DEFAULT_SHEET_ID);
+    return sheetId === 'TON_GOOGLE_SHEET_ID_ICI' ? '' : sheetId;
+  }
+
+  function cleanConfigValue(value) {
+    return String(value || '').trim();
   }
 
   function cleanupWorkbookSheets(ss) {
@@ -270,7 +290,7 @@
       var ss = getSpreadsheet();
       if (!ss) {
         return ContentService
-          .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configurÃ©' }))
+          .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configure dans Google Apps Script' }))
           .setMimeType(ContentService.MimeType.JSON);
       }
 
@@ -318,7 +338,7 @@
     var ss = getSpreadsheet();
     if (!ss) {
       return ContentService
-        .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configurÃƒÂ©' }))
+        .createTextOutput(JSON.stringify({ status: 'error', message: 'SHEET_ID non configure dans Google Apps Script' }))
         .setMimeType(ContentService.MimeType.JSON);
     }
 

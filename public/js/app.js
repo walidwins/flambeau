@@ -6,6 +6,10 @@
 // ---- PRODUITS ----
 var PRODUCTS = [];
 var DEFAULT_PRODUCT_IMAGE = 'imgs/aery-good-vibes-premium-scented-candle-packaging.jpg';
+var PRODUCTS_CACHE_KEY = 'flambeau_products_cache_v3';
+var PRODUCTS_CACHE_MAX_AGE = 10 * 60 * 1000;
+var PRODUCTS_FETCH_TIMEOUT = 6500;
+var PRODUCTS_REFRESH_TIMEOUT = 3000;
 var DEFAULT_FRAGRANCES = [
    'Gardenia',
     'Herbal',
@@ -97,11 +101,6 @@ function loadProductsFromBackend(callback) {
     callback();
   }
 
-  try {
-    localStorage.removeItem('flambeau_products_cache_v1');
-    localStorage.removeItem('flambeau_products_cache_v2');
-  } catch(e) {}
-
   function normalizeProducts(products) {
     if (products && Array.isArray(products.products)) {
       products = products.products;
@@ -160,19 +159,82 @@ function loadProductsFromBackend(callback) {
       });
   }
 
-  fetch('/api/products')
+  function readCachedProducts() {
+    try {
+      var raw = localStorage.getItem(PRODUCTS_CACHE_KEY);
+      if (!raw) return [];
+      var cached = JSON.parse(raw);
+      if (!cached || !cached.savedAt || Date.now() - cached.savedAt > PRODUCTS_CACHE_MAX_AGE) {
+        return [];
+      }
+      return normalizeProducts(cached.products);
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function writeCachedProducts(products) {
+    try {
+      localStorage.setItem(PRODUCTS_CACHE_KEY, JSON.stringify({
+        savedAt: Date.now(),
+        products: products
+      }));
+      localStorage.removeItem('flambeau_products_cache_v1');
+      localStorage.removeItem('flambeau_products_cache_v2');
+    } catch(e) {}
+  }
+
+  function refreshVisibleProducts() {
+    var page = document.body.dataset.page;
+    if (page === 'home') {
+      renderHomeFeaturedProducts();
+    } else if (page === 'shop') {
+      var activeBtn = document.querySelector('.filter-btn--active');
+      renderShopProducts(activeBtn && activeBtn.dataset.category ? activeBtn.dataset.category : 'all');
+    } else if (page === 'cart') {
+      renderCartDrawer();
+      renderCartPage();
+    }
+  }
+
+  var cachedProducts = readCachedProducts();
+  if (cachedProducts.length > 0) {
+    PRODUCTS = cachedProducts;
+    finish();
+  }
+
+  var controller = window.AbortController ? new AbortController() : null;
+  var timeoutDelay = cachedProducts.length > 0 ? PRODUCTS_REFRESH_TIMEOUT : PRODUCTS_FETCH_TIMEOUT;
+  var timeoutId = setTimeout(function() {
+    if (controller) controller.abort();
+    finish();
+  }, timeoutDelay);
+
+  fetch('/api/products', controller ? { signal: controller.signal } : {})
     .then(function(response) {
       if (!response.ok) throw new Error('API produits indisponible');
       return response.json();
     })
     .then(function(products) {
+      clearTimeout(timeoutId);
       var cleanProducts = normalizeProducts(products);
-      PRODUCTS = cleanProducts;
+      if (cleanProducts.length > 0) {
+        PRODUCTS = cleanProducts;
+        writeCachedProducts(cleanProducts);
+        if (done && cachedProducts.length > 0) refreshVisibleProducts();
+      }
       finish();
     })
     .catch(function(error) {
-      console.warn('Impossible de charger les produits depuis le backend:', error);
-      PRODUCTS = [];
+      clearTimeout(timeoutId);
+      if (error && error.name === 'AbortError') {
+        console.warn('Chargement produits trop lent, affichage du cache local.');
+      } else {
+        console.warn('Impossible de charger les produits depuis le backend:', error);
+      }
+      if (PRODUCTS.length === 0) {
+        PRODUCTS = cachedProducts;
+      }
       finish();
     });
 }
@@ -449,8 +511,7 @@ function initNav() {
 }
 
 // ---- HOME PAGE ----
-function initHome() {
-  // Featured products
+function renderHomeFeaturedProducts() {
   var grid = document.querySelector('.featured-products .products-grid');
   if (grid) {
     var featured = getFeaturedProducts();
@@ -490,6 +551,11 @@ function initHome() {
     });
     initReveal();
   }
+}
+
+function initHome() {
+  // Featured products
+  renderHomeFeaturedProducts();
 
   // Testimonials
   var track = document.querySelector('.testimonials__track');

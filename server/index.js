@@ -27,6 +27,7 @@ const config = {
 const sessions = new Map();
 const rateBuckets = new Map();
 const ONE_HOUR = 60 * 60 * 1000;
+const PRODUCTS_FETCH_TIMEOUT_MS = 6500;
 
 const mimeTypes = {
   '.html': 'text/html; charset=utf-8',
@@ -560,7 +561,16 @@ async function readProductsFromAppsScript() {
   }
 
   const separator = config.googleAppsScriptUrl.includes('?') ? '&' : '?';
-  const response = await fetch(`${config.googleAppsScriptUrl}${separator}action=products`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), PRODUCTS_FETCH_TIMEOUT_MS);
+  let response;
+  try {
+    response = await fetch(`${config.googleAppsScriptUrl}${separator}action=products`, {
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
   const text = await response.text();
   let data = {};
 
@@ -715,7 +725,9 @@ async function handleApi(req, res, url) {
         return;
       }
 
-      sendJson(res, 200, dedupeProducts(normalizeProductsPayload(integration.products)));
+      sendJson(res, 200, dedupeProducts(normalizeProductsPayload(integration.products)), {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300'
+      });
       return;
     } catch (error) {
       console.warn('Products Google integration failed:', error.message);
@@ -961,12 +973,15 @@ async function serveStatic(req, res, url) {
 
     const extension = path.extname(filePath).toLowerCase();
     const body = await fs.readFile(filePath);
-    const immutable = /\.(?:jpg|jpeg|png|webp|svg|mp4|css|js)$/i.test(filePath);
+    const immutable = /\.(?:jpg|jpeg|png|webp|svg|mp4)$/i.test(filePath);
+    const cacheableAsset = /\.(?:css|js)$/i.test(filePath);
 
     res.writeHead(200, securityHeaders({
       'Content-Type': mimeTypes[extension] || 'application/octet-stream',
       'Content-Length': body.length,
-      'Cache-Control': immutable ? 'public, max-age=86400' : 'no-store'
+      'Cache-Control': immutable
+        ? 'public, max-age=2592000'
+        : (cacheableAsset ? 'public, max-age=3600' : 'no-store')
     }));
     res.end(req.method === 'HEAD' ? undefined : body);
   } catch (error) {

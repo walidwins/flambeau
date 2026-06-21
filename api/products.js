@@ -1,6 +1,7 @@
 const PRODUCTS_ACTION = 'products';
 const ADD_PRODUCT_ACTION = 'addProduct';
 const UPDATE_PRODUCT_ACTION = 'updateProduct';
+const PRODUCTS_FETCH_TIMEOUT_MS = 6500;
 const { applySecurityHeaders, rejectUnsafeRequest } = require('./_security');
 
 function sendJson(res, statusCode, payload) {
@@ -28,6 +29,20 @@ async function readJsonResponse(response) {
     return text ? JSON.parse(text) : {};
   } catch (error) {
     return { success: true, raw: text };
+  }
+}
+
+async function fetchWithTimeout(url, options = {}, timeoutMs = PRODUCTS_FETCH_TIMEOUT_MS) {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), timeoutMs);
+
+  try {
+    return await fetch(url, {
+      ...options,
+      signal: controller.signal
+    });
+  } finally {
+    clearTimeout(timeout);
   }
 }
 
@@ -97,7 +112,7 @@ module.exports = async function handler(req, res) {
       }
 
       const separator = scriptUrl.indexOf('?') === -1 ? '?' : '&';
-      const response = await fetch(scriptUrl + separator + 'action=' + encodeURIComponent(PRODUCTS_ACTION));
+      const response = await fetchWithTimeout(scriptUrl + separator + 'action=' + encodeURIComponent(PRODUCTS_ACTION));
       const data = await readJsonResponse(response);
 
       if (!response.ok || data.status === 'error') {

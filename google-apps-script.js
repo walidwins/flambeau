@@ -1,4 +1,4 @@
-// ============================================================
+﻿// ============================================================
 // FLAMBEAU - Google Apps Script
 // Produits + commandes Google Sheets + emails
 // ============================================================
@@ -29,14 +29,14 @@ var ORDER_HEADERS = [
   'Date',
   'Heure',
   'Statut',
-  'Prénom',
+  'Prenom',
   'Nom',
-  'Téléphone',
+  'Telephone',
   'Ville',
   'Adresse',
   'Articles',
   'Parfums',
-  'Quantité totale',
+  'Quantite totale',
   'Sous-total',
   'Livraison',
   'Total',
@@ -635,12 +635,21 @@ function cleanNumber(value, min, max) {
 }
 
 function normalizeKey(value) {
-  return cleanText(value, 300)
-    .toLowerCase()
-    .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '')
+  return removeAccents(cleanText(value, 300).toLowerCase())
     .replace(/\s+/g, ' ')
     .trim();
+}
+
+function removeAccents(value) {
+  return String(value || '')
+    .replace(/[àáâãäå]/g, 'a')
+    .replace(/[ç]/g, 'c')
+    .replace(/[èéêë]/g, 'e')
+    .replace(/[ìíîï]/g, 'i')
+    .replace(/[ñ]/g, 'n')
+    .replace(/[òóôõö]/g, 'o')
+    .replace(/[ùúûü]/g, 'u')
+    .replace(/[ýÿ]/g, 'y');
 }
 
 function cleanCategory(value) {
@@ -655,7 +664,7 @@ function getCategoryLabel(category) {
     bougies: 'Bougies',
     bakhour: 'Bakhour',
     diffuseurs: 'Diffuseurs',
-    'poudre-parfumee': 'Poudre parfumée'
+    'poudre-parfumee': 'Poudre parfumee'
   };
   return labels[cleanCategory(category)] || 'Bougies';
 }

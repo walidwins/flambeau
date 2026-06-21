@@ -571,12 +571,69 @@ function sendOrderEmail(order) {
     '',
     'Notes : ' + order.notes
   ].join('\n');
+  var htmlBody = buildOrderEmailHtml(order);
 
   MailApp.sendEmail({
     to: NOTIF_EMAIL,
     subject: 'Nouvelle commande Flambeau - ' + order.orderNum,
-    body: body
+    body: body,
+    htmlBody: htmlBody
   });
+}
+
+function buildOrderEmailHtml(order) {
+  var rows = order.items.map(function(item) {
+    var product = escapeEmailHtml(item.name)
+      + (item.fragrance ? '<div style="margin-top:4px;color:#1f2933;">Parfum : ' + escapeEmailHtml(item.fragrance) + '</div>' : '');
+    return '<tr>'
+      + '<td style="padding:16px 14px;border-bottom:1px solid #ece7df;font-size:17px;line-height:1.35;color:#111827;">' + product + '</td>'
+      + '<td style="padding:16px 14px;border-bottom:1px solid #ece7df;text-align:center;font-weight:700;color:#111827;">' + escapeEmailHtml(item.qty) + '</td>'
+      + '<td style="padding:16px 14px;border-bottom:1px solid #ece7df;text-align:right;color:#111827;">'
+      + '<strong>' + formatPrice(item.total) + '</strong><br><span style="font-size:13px;color:#6b5d50;">MAD</span></td>'
+      + '</tr>';
+  }).join('');
+
+  var customer = '<div style="margin-bottom:14px;">'
+    + '<div style="font-weight:700;color:#111827;">Date</div>'
+    + '<div style="margin-top:3px;color:#1f2933;">' + escapeEmailHtml(order.date + ' - ' + order.heure) + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:14px;">'
+    + '<div style="font-weight:700;color:#111827;">Client</div>'
+    + '<div style="margin-top:3px;color:#1f2933;">' + escapeEmailHtml((order.prenom + ' ' + order.nom).trim() || '-') + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:14px;">'
+    + '<div style="font-weight:700;color:#111827;">Telephone</div>'
+    + '<div style="margin-top:3px;color:#1f2933;">' + escapeEmailHtml(order.telephone || '-') + '</div>'
+    + '</div>'
+    + '<div style="margin-bottom:14px;">'
+    + '<div style="font-weight:700;color:#111827;">Adresse</div>'
+    + '<div style="margin-top:3px;color:#1f2933;">' + escapeEmailHtml([order.adresse, order.ville].filter(Boolean).join(', ') || '-') + '</div>'
+    + '</div>';
+
+  var content = '<h1 style="margin:0 0 22px;font-family:Georgia,serif;font-size:26px;line-height:1.25;color:#111827;">'
+    + 'Nouvelle commande : <span style="color:#b89164;">' + escapeEmailHtml(order.orderNum) + '</span></h1>'
+    + '<table role="presentation" width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;">'
+    + '<tr>'
+    + '<td width="42%" valign="top" style="padding:0 24px 18px 0;font-family:Georgia,serif;font-size:16px;line-height:1.45;">' + customer + '</td>'
+    + '<td width="58%" valign="top" style="padding:0 0 18px 0;">'
+    + '<table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border:1px solid #ece7df;font-family:Georgia,serif;">'
+    + '<thead><tr style="background:#33302e;color:#ffffff;">'
+    + '<th align="left" style="padding:14px;font-size:16px;">Produit</th>'
+    + '<th align="center" style="padding:14px;font-size:16px;">Qte</th>'
+    + '<th align="right" style="padding:14px;font-size:16px;">Prix</th>'
+    + '</tr></thead>'
+    + '<tbody>' + rows + '</tbody>'
+    + '</table>'
+    + '<table width="100%" cellspacing="0" cellpadding="0" style="margin-top:16px;border-collapse:collapse;font-family:Georgia,serif;">'
+    + '<tr><td style="padding:4px 0;text-align:right;color:#6b5d50;">Sous-total : ' + formatPrice(order.subtotal) + ' MAD</td></tr>'
+    + '<tr><td style="padding:4px 0;text-align:right;color:#6b5d50;">Livraison : ' + formatPrice(order.livraison) + ' MAD</td></tr>'
+    + '<tr><td style="padding:8px 0;text-align:right;font-size:26px;font-weight:700;color:#b89164;">Total : ' + formatPrice(order.total) + ' MAD</td></tr>'
+    + '</table>'
+    + '</td>'
+    + '</tr></table>'
+    + (order.notes ? '<div style="margin-top:10px;padding:14px 16px;background:#faf8f5;border-left:4px solid #d6ad39;font-family:Georgia,serif;color:#1f2933;"><strong>Notes :</strong><br>' + escapeEmailHtml(order.notes) + '</div>' : '');
+
+  return buildFlambeauEmailShell(content);
 }
 
 // -------------------- Contact --------------------
@@ -596,23 +653,80 @@ function handleContact(contact) {
   }
 
   if (NOTIF_EMAIL) {
-    MailApp.sendEmail({
+    var body = [
+      'Nouveau message contact',
+      '',
+      'Nom : ' + cleanContact.prenom + ' ' + cleanContact.nom,
+      'Email : ' + cleanContact.email,
+      'Telephone : ' + cleanContact.telephone,
+      'Sujet : ' + cleanContact.sujet,
+      '',
+      cleanContact.message
+    ].join('\n');
+
+    var emailOptions = {
       to: NOTIF_EMAIL,
       subject: 'Message contact Flambeau - ' + (cleanContact.sujet || 'Nouveau message'),
-      body: [
-        'Nouveau message contact',
-        '',
-        'Nom : ' + cleanContact.prenom + ' ' + cleanContact.nom,
-        'Email : ' + cleanContact.email,
-        'Telephone : ' + cleanContact.telephone,
-        'Sujet : ' + cleanContact.sujet,
-        '',
-        cleanContact.message
-      ].join('\n')
-    });
+      body: body,
+      htmlBody: buildContactEmailHtml(cleanContact)
+    };
+    if (cleanContact.email) {
+      emailOptions.replyTo = cleanContact.email;
+    }
+    MailApp.sendEmail(emailOptions);
   }
 
   return { status: 'ok', type: 'contact', email: 'sent' };
+}
+
+function buildContactEmailHtml(contact) {
+  var details = [
+    ['Nom', (contact.prenom + ' ' + contact.nom).trim()],
+    ['Email', contact.email],
+    ['Telephone', contact.telephone || '-'],
+    ['Sujet', contact.sujet || 'Nouveau message']
+  ].map(function(row) {
+    return '<tr>'
+      + '<td style="padding:12px 16px;border-bottom:1px solid #ece7df;font-weight:700;color:#111827;width:34%;">' + escapeEmailHtml(row[0]) + '</td>'
+      + '<td style="padding:12px 16px;border-bottom:1px solid #ece7df;color:#1f2933;">' + escapeEmailHtml(row[1] || '-') + '</td>'
+      + '</tr>';
+  }).join('');
+
+  var content = '<h1 style="margin:0 0 22px;font-family:Georgia,serif;font-size:26px;line-height:1.25;color:#111827;">'
+    + 'Nouveau message contact</h1>'
+    + '<table width="100%" cellspacing="0" cellpadding="0" style="border-collapse:collapse;border:1px solid #ece7df;font-family:Georgia,serif;font-size:16px;">'
+    + details
+    + '</table>'
+    + '<div style="margin-top:22px;padding:18px 20px;background:#faf8f5;border-left:4px solid #d6ad39;font-family:Georgia,serif;color:#1f2933;font-size:17px;line-height:1.55;">'
+    + '<div style="margin-bottom:8px;font-weight:700;color:#111827;">Message</div>'
+    + escapeEmailHtml(contact.message || '-').replace(/\n/g, '<br>')
+    + '</div>';
+
+  return buildFlambeauEmailShell(content);
+}
+
+function buildFlambeauEmailShell(content) {
+  return '<div style="margin:0;padding:26px;background:#f4f1ec;">'
+    + '<div style="max-width:760px;margin:0 auto;background:#ffffff;padding:28px 38px 34px;border-bottom:1px solid #e8e1d8;">'
+    + '<div style="text-align:center;margin-bottom:34px;">'
+    + '<div style="font-family:Georgia,serif;font-size:36px;font-weight:700;letter-spacing:9px;color:#111827;">FLAMBEAU</div>'
+    + '<div style="width:180px;height:4px;background:#d6ad39;margin:20px auto 0;border-radius:999px;"></div>'
+    + '</div>'
+    + content
+    + '<div style="margin-top:30px;border-top:1px solid #ece7df;padding-top:16px;text-align:center;font-family:Georgia,serif;font-size:13px;color:#8a7a68;">'
+    + 'Email automatique Flambeau - commandes et messages clients'
+    + '</div>'
+    + '</div>'
+    + '</div>';
+}
+
+function escapeEmailHtml(value) {
+  return String(value == null ? '' : value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#39;');
 }
 
 // -------------------- Helpers --------------------
